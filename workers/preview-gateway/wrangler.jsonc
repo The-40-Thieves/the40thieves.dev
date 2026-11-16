@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "preview-gateway",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-10-26",
+  // global_fetch_strictly_public: the upstream is another Worker on this account (the hub's
+  // preview alias). Without the flag that fetch is refused as a same-account loop.
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "upload_source_maps": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  // Only hosts ending in -preview: a `*.the40thieves.dev/*` route also took the hooks and relay
+  // Custom Domains' traffic (tried 2026-11-16). The Worker answers pr-<n>-preview hosts and 404s
+  // any other -preview host. The proxied wildcard AAAA record that makes the hosts resolve is in
+  // infra/cloudflare/the40thieves.dev.json.
+  "routes": [{ "pattern": "*-preview.the40thieves.dev/*", "zone_name": "the40thieves.dev" }],
+  // PREVIEW_ORIGIN_SUFFIX (`-hub.<subdomain>.workers.dev`) is a secret, pushed by the deploy job
+  // from the repository secret of the same name, so the subdomain never appears in this repo.
+}

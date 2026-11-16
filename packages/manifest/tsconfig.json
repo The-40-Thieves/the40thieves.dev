@@ -1,0 +1,4 @@
+{
+  "extends": "@the40thieves/config/tsconfig.node.json",
+  "include": ["src/**/*.ts"]
+}

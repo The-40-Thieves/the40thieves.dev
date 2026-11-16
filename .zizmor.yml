@@ -1,0 +1,6 @@
+# zizmor: static analysis of the GitHub Actions workflows.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        '*': hash-pin

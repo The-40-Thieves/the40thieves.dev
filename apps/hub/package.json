@@ -1,0 +1,48 @@
+{
+  "name": "hub",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "prebuild": "node ../../scripts/gen-headers.ts",
+    "build": "astro build",
+    "preview": "wrangler dev",
+    "typecheck": "astro check",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:stack": "playwright test -c playwright.stack.config.ts"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "catalog:",
+    "@astrojs/react": "catalog:",
+    "@astrojs/rss": "catalog:",
+    "@astrojs/sitemap": "catalog:",
+    "@portabletext/to-html": "catalog:",
+    "@portabletext/types": "catalog:",
+    "@sentry/cloudflare": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@the40thieves/manifest": "workspace:*",
+    "@the40thieves/schemas": "workspace:*",
+    "astro": "catalog:",
+    "marked": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "sanitize-html": "catalog:",
+    "tailwindcss": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@astrojs/check": "catalog:",
+    "@axe-core/playwright": "catalog:",
+    "@emnapi/runtime": "catalog:",
+    "@cloudflare/workers-types": "catalog:",
+    "@playwright/test": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/sanitize-html": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

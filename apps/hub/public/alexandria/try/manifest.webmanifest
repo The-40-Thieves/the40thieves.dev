@@ -1,0 +1,19 @@
+{
+  "name": "Try alexandria",
+  "short_name": "alexandria",
+  "description": "Search alexandria's sources with your own keys and get answers that cite them.",
+  "id": "/alexandria/try/",
+  "start_url": "/alexandria/try/",
+  "scope": "/alexandria/try/",
+  "display": "standalone",
+  "background_color": "#fafaf7",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "/alexandria/try/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

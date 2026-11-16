@@ -1,0 +1,23 @@
+{
+  "name": "@the40thieves/manifest",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Builds manifest.json from the projects collection and checks every surface against it.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./webmcp": "./src/webmcp.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@the40thieves/schemas": "workspace:*",
+    "minisearch": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@the40thieves/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

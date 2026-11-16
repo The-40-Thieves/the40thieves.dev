@@ -1,0 +1,110 @@
+{
+  "zone": "the40thieves.tech",
+  "dns": [
+    {
+      "type": "CAA",
+      "name": "the40thieves.tech",
+      "content": "0 issue \"letsencrypt.org\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.tech",
+      "content": "0 issue \"pki.goog; cansignhttpexchanges=yes\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.tech",
+      "content": "0 issue \"ssl.com\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.tech",
+      "content": "0 issuewild \"letsencrypt.org\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.tech",
+      "content": "0 issuewild \"pki.goog; cansignhttpexchanges=yes\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.tech",
+      "content": "0 issuewild \"ssl.com\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CNAME",
+      "name": "the40thieves.tech",
+      "content": "the40thieves-tech.pages.dev",
+      "proxied": true,
+      "ttl": 1,
+      "comment": "Pages custom domain for the40thieves-tech project"
+    }
+  ],
+  "waf_custom_rules": [],
+  "waf_managed_rules": [
+    {
+      "action": "execute",
+      "action_parameters": {
+        "id": "77454fe2d30c4220b5701f6fdfb893ba"
+      },
+      "description": "Execute the Cloudflare Managed Free Ruleset",
+      "enabled": true,
+      "expression": "true"
+    }
+  ],
+  "redirect_rules": [],
+  "worker_routes": [],
+  "dnssec": {
+    "status": "pending",
+    "ds": "the40thieves.tech. 3600 IN DS 2371 13 2 0B8F525C69758DB925E9578D33B8CC7B25E0F6DA0ABD67754D663D0D12C35676"
+  },
+  "settings": {
+    "security_header": {
+      "strict_transport_security": {
+        "enabled": false,
+        "include_subdomains": false,
+        "max_age": 0,
+        "nosniff": false,
+        "preload": false
+      }
+    }
+  },
+  "bot_management": {
+    "ai_agents": {
+      "anthropic_agent": "disabled",
+      "google_agent": "disabled",
+      "instinct": "disabled",
+      "muse": "disabled",
+      "openai_agent": "disabled"
+    },
+    "ai_bots_protection": "disabled",
+    "ai_search": "disabled",
+    "ai_training": "disallow",
+    "ai_user": "disabled",
+    "bot_preference_sync_enabled": true,
+    "cf_robots_variant": "off",
+    "content_bots_protection": "disabled",
+    "crawler_protection": "disabled",
+    "enable_js": false,
+    "fight_mode": false,
+    "is_robots_txt_managed": true
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "zone": "the40thieves.dev",
+  "dns": [
+    {
+      "type": "AAAA",
+      "name": "*.the40thieves.dev",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "AAAA",
+      "name": "hooks.the40thieves.dev",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "AAAA",
+      "name": "relay.the40thieves.dev",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "AAAA",
+      "name": "the40thieves.dev",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.dev",
+      "content": "0 issue \"letsencrypt.org\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.dev",
+      "content": "0 issue \"pki.goog; cansignhttpexchanges=yes\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.dev",
+      "content": "0 issue \"ssl.com\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.dev",
+      "content": "0 issuewild \"letsencrypt.org\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.dev",
+      "content": "0 issuewild \"pki.goog; cansignhttpexchanges=yes\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "CAA",
+      "name": "the40thieves.dev",
+      "content": "0 issuewild \"ssl.com\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
+    },
+    {
+      "type": "AAAA",
+      "name": "www.the40thieves.dev",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1,
+      "comment": "www to apex: answered by the redirect rule (PLAN P2-14)"
+    }
+  ],
+  "waf_custom_rules": [],
+  "waf_managed_rules": [
+    {
+      "action": "execute",
+      "action_parameters": {
+        "id": "77454fe2d30c4220b5701f6fdfb893ba"
+      },
+      "description": "Execute the Cloudflare Managed Free Ruleset",
+      "enabled": true,
+      "expression": "true"
+    }
+  ],
+  "redirect_rules": [
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://the40thieves.dev\", http.request.uri.path)"
+          }
+        }
+      },
+      "description": "www to the apex (PLAN P2-14): 301, path and query string kept",
+      "enabled": true,
+      "expression": "(http.host eq \"www.the40thieves.dev\")"
+    }
+  ],
+  "worker_routes": [
+    {
+      "pattern": "*-preview.the40thieves.dev/*",
+      "script": "preview-gateway"
+    },
+    {
+      "pattern": "the40thieves.dev/alexandria-mcp/docs*",
+      "script": "alexandria-mcp-docs"
+    },
+    {
+      "pattern": "the40thieves.dev/audio-forge/docs*",
+      "script": "audio-forge-docs"
+    },
+    {
+      "pattern": "the40thieves.dev/codecalc/docs*",
+      "script": "codecalc-docs"
+    },
+    {
+      "pattern": "the40thieves.dev/mcp*",
+      "script": "mcp"
+    }
+  ],
+  "dnssec": {
+    "status": "active",
+    "ds": "the40thieves.dev. 3600 IN DS 2371 13 2 E7ABCEC0A10497FEDE0089E0F038F2899C17FA639435420F71D5ABAA2FCBFABA"
+  },
+  "settings": {
+    "security_header": {
+      "strict_transport_security": {
+        "enabled": true,
+        "include_subdomains": true,
+        "max_age": 63072000,
+        "nosniff": true,
+        "preload": true
+      }
+    }
+  },
+  "bot_management": {
+    "ai_agents": {
+      "anthropic_agent": "disabled",
+      "google_agent": "disabled",
+      "instinct": "disabled",
+      "muse": "disabled",
+      "openai_agent": "disabled"
+    },
+    "ai_bots_protection": "disabled",
+    "ai_search": "disabled",
+    "ai_training": "disallow",
+    "ai_user": "disabled",
+    "bot_preference_sync_enabled": true,
+    "cf_robots_variant": "off",
+    "content_bots_protection": "disabled",
+    "crawler_protection": "disabled",
+    "enable_js": false,
+    "fight_mode": false,
+    "is_robots_txt_managed": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@the40thieves/config",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.node.json": "./tsconfig.node.json",
+    "./eslint.config.js": "./eslint.config.js",
+    "./prettier.config.js": "./prettier.config.js"
+  }
+}

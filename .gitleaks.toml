@@ -1,0 +1,23 @@
+# Gitleaks configuration: the default ruleset plus repo-specific allowlists.
+title = "the40thieves.dev"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Lockfile integrity hashes, SHA-pinned actions, the PostHog project token, Origin Trial tokens and the source probe's key placeholder are not secrets."
+paths = ['''pnpm-lock\.yaml''']
+regexes = [
+  '''uses: [A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@[0-9a-f]{40}''',
+  # PostHog `phc_` project tokens are client-side write-only keys shipped to every browser
+  # (apps/hub/src/lib/analytics.ts, P2-12).
+  '''phc_[A-Za-z0-9]{40,}''',
+  # Origin Trial tokens (security/origin-trials.json, O-13) are public: every page prints
+  # them in a meta tag and they only work on the origin they name. The marker is the base64 of
+  # `{"origin":"https://the40thieves.dev:443`, so only a token for this site is exempt.
+  '''eyJvcmlnaW4iOiJodHRwczovL3RoZTQwdGhpZXZlcy5kZXY6NDQz''',
+  # The alexandria source probe (scripts/probe-sources.ts, P4-S1) puts this fixed string in
+  # every key variable so keyed adapters run; it is not a credential anywhere and the generic
+  # API-key rule matches it in the code and the tests.
+  '''the40thieves-probe''',
+]

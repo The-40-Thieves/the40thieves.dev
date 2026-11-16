@@ -1,0 +1,275 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "the40thieves visitor-key relay",
+    "version": "1.0.0",
+    "description": "Relays one browser request from the site to one allowlisted upstream host, carrying the visitor's own key; nothing is stored. Production answers on relay.the40thieves.dev for the origin https://the40thieves.dev. The one server listed here is the local stack (`pnpm relay-stack`), where the allowlist is upstream.test alone and the upstream is a mock on loopback. Every call to /v1/session and /v1/fetch must carry an Origin header equal to the allowed origin."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8795",
+      "description": "The local relay stack started by `pnpm relay-stack`."
+    }
+  ],
+  "paths": {
+    "/v1/session": {
+      "post": {
+        "operationId": "mintSession",
+        "summary": "Trade a Turnstile token for a one-hour relay session",
+        "description": "Checks the origin, 5 requests per IP per 60 s, a body of at most 4096 bytes, then the Turnstile token. On the local stack the accepted token is Cloudflare's test token XXXX.DUMMY.TOKEN.XXXX.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SessionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A signed session token and when it expires.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Session" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Error" },
+          "405": { "$ref": "#/components/responses/Error" },
+          "413": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" },
+          "503": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/fetch": {
+      "get": {
+        "operationId": "relayGet",
+        "summary": "Relay a GET to the target",
+        "parameters": [
+          { "$ref": "#/components/parameters/Target" },
+          { "$ref": "#/components/parameters/Session" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Relayed" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" },
+          "405": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" },
+          "502": { "$ref": "#/components/responses/Error" },
+          "503": { "$ref": "#/components/responses/Error" },
+          "504": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "post": {
+        "operationId": "relayPost",
+        "summary": "Relay a POST and its body to the target",
+        "description": "The request body is capped at 65536 bytes.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Target" },
+          { "$ref": "#/components/parameters/Session" }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" },
+              "example": { "model": "example", "input": "hello" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Relayed" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" },
+          "405": { "$ref": "#/components/responses/Error" },
+          "413": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" },
+          "502": { "$ref": "#/components/responses/Error" },
+          "503": { "$ref": "#/components/responses/Error" },
+          "504": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/quota/{source}": {
+      "get": {
+        "operationId": "quotaGet",
+        "summary": "Relay a GET to a keyed source with the operator's key, under a daily budget",
+        "description": "Spends one request of the source's daily site budget (80% of upstream's cap) and of this visitor's daily budget. Over either, the answer is 429 quota_reached with Retry-After set to the next UTC midnight. Without an operator key for the source, 503 not_configured.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Source" },
+          { "$ref": "#/components/parameters/QuotaTarget" },
+          { "$ref": "#/components/parameters/Session" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/QuotaRelayed" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" },
+          "405": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" },
+          "502": { "$ref": "#/components/responses/Error" },
+          "503": { "$ref": "#/components/responses/Error" },
+          "504": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/healthz": {
+      "get": {
+        "operationId": "healthz",
+        "summary": "Whether the relay is up and configured",
+        "responses": {
+          "200": {
+            "description": "Up.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Health" }
+              }
+            }
+          },
+          "405": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "Target": {
+        "name": "X-Relay-Target",
+        "in": "header",
+        "required": true,
+        "description": "The absolute https URL to relay to; its host must be on the allowlist.",
+        "schema": { "type": "string", "format": "uri", "maxLength": 4096 },
+        "example": "https://upstream.test/ok"
+      },
+      "Session": {
+        "name": "X-Relay-Session",
+        "in": "header",
+        "required": true,
+        "description": "A session token from /v1/session.",
+        "schema": { "type": "string", "maxLength": 256 }
+      },
+      "Source": {
+        "name": "source",
+        "in": "path",
+        "required": true,
+        "description": "A quota-relay source: courtlistener, guardian or ucdp.",
+        "schema": { "type": "string", "pattern": "^[a-z0-9-]+$", "maxLength": 64 },
+        "example": "ucdp"
+      },
+      "QuotaTarget": {
+        "name": "X-Relay-Target",
+        "in": "header",
+        "required": true,
+        "description": "The absolute https URL to relay to; its host must be the source's one host.",
+        "schema": { "type": "string", "format": "uri", "maxLength": 4096 },
+        "example": "https://ucdpapi.pcr.uu.se/api/gedevents/25.1?Country=90"
+      }
+    },
+    "responses": {
+      "Relayed": {
+        "description": "The upstream's status, body and allowed headers, streamed. The body is capped at 2 MiB and the exchange at 20 s.",
+        "content": {
+          "*/*": {
+            "schema": {}
+          }
+        }
+      },
+      "QuotaRelayed": {
+        "description": "As for /v1/fetch; the request went with the operator key, never the visitor's.",
+        "headers": {
+          "X-Quota-Remaining": {
+            "description": "Requests this visitor can still make to this source today (UTC).",
+            "schema": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "content": {
+          "*/*": {
+            "schema": {}
+          }
+        }
+      },
+      "Error": {
+        "description": "A refusal, named by its code.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "SessionRequest": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 2048,
+            "description": "A Turnstile widget response token.",
+            "example": "XXXX.DUMMY.TOKEN.XXXX"
+          }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "required": ["session", "expires_at"],
+        "additionalProperties": false,
+        "properties": {
+          "session": { "type": "string" },
+          "expires_at": {
+            "type": "integer",
+            "description": "Expiry in seconds since the epoch, one hour after minting."
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": ["ok", "hosts", "configured", "quota"],
+        "additionalProperties": false,
+        "properties": {
+          "ok": { "const": true },
+          "hosts": { "type": "integer", "minimum": 0 },
+          "configured": { "type": "boolean" },
+          "quota": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The quota-relay sources that have an operator key, by name."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "origin_not_allowed",
+              "method_not_allowed",
+              "bad_target",
+              "host_not_allowed",
+              "session_required",
+              "session_invalid",
+              "rate_limited",
+              "quota_reached",
+              "body_too_large",
+              "dns_blocked",
+              "upstream_redirect",
+              "upstream_too_large",
+              "upstream_timeout",
+              "upstream_failed",
+              "turnstile_failed",
+              "not_found",
+              "not_configured"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

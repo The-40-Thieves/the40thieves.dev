@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hub",
+  // The Astro handler wrapped with Sentry (P2-12); see sentry.server.config.ts.
+  "main": "./sentry.server.config.ts",
+  "compatibility_date": "2026-10-26",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  // Source maps go to Sentry from the deploy job and are deleted before deploy; Cloudflare never
+  // receives or serves them (P2-12 leak gate).
+  "upload_source_maps": false,
+  // Public configuration, not secrets: the DSN is a client key, the release is set per deploy.
+  "vars": {
+    "SENTRY_DSN": "https://bbbf77b092b631661ea037bcab02c989@o4511381422669824.ingest.us.sentry.io/4512367985426432",
+    "SENTRY_ENVIRONMENT": "production",
+  },
+  "workers_dev": false,
+  "preview_urls": true,
+  "routes": [{ "pattern": "the40thieves.dev", "custom_domain": true }],
+}

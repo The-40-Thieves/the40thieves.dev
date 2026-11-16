@@ -1,0 +1,418 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [rebuild]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: ci
+    # A calling job must grant at least what every job in the called workflow declares, even
+    # jobs that will be skipped: osv-scanner declares actions: read + security-events: write and
+    # preview declares pull-requests: write. Without this the run ends in startup_failure.
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+      security-events: write
+    uses: $/.github/workflows/ci.yml
+    # Repository secrets stop at the reusable-workflow boundary: every secret ci.yml declares
+    # in its workflow_call contract has to be passed here, or the job reads an empty string.
+    secrets:
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      CLOUDFLARE_DRIFT_TOKEN: ${{ secrets.CLOUDFLARE_DRIFT_TOKEN }}
+      SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+
+  deploy:
+    name: deploy
+    needs: ci
+    runs-on: instabox-medium
+    environment:
+      name: production
+      url: https://the40thieves.dev
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The loader reads as the App (P2-03), downscoped to contents and metadata read.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: the40thieves.dev
+          permission-contents: read
+          permission-metadata: read
+      - run: pnpm build
+        env:
+          # The GitHub loader reads the org's public repositories over GraphQL (one query, 1 point).
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+          # Server-build source maps for Sentry (P2-12); deleted below, before anything is uploaded
+          # to Cloudflare. The client build never gets any.
+          HUB_SOURCEMAPS: '1'
+      - name: Upload the Worker source maps to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: the-40-thieves
+          SENTRY_PROJECT: hub
+          SENTRY_RELEASE: ${{ github.sha }}
+        run: |
+          pnpm exec sentry-cli sourcemaps inject apps/hub/dist/server
+          pnpm exec sentry-cli sourcemaps upload --strict --release "$SENTRY_RELEASE" apps/hub/dist/server
+      - name: Delete every source map before the deploy
+        run: |
+          find apps/hub/dist -name '*.map' -print -delete
+          test "$(find apps/hub/dist -name '*.map' | wc -l)" -eq 0
+      # The /mcp Worker (P3-S1) serves the manifest and the docs index this build emitted, read
+      # from KV; both go up before the hub so the two surfaces never disagree for long. The job
+      # deploy-mcp below deploys the Worker once this job is done. Needs Workers KV Storage Write
+      # on the production token.
+      - name: Upload the manifest and the docs index to the mcp KV namespace
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm --filter @the40thieves/mcp exec wrangler kv key put manifest.json --binding MCP_KV --remote --path ../../apps/hub/dist/client/manifest.json
+          pnpm --filter @the40thieves/mcp exec wrangler kv key put docs-index.json --binding MCP_KV --remote --path ../../apps/hub/dist/client/mcp/docs-index.json
+      - name: Deploy the hub Worker
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/hub
+          packageManager: pnpm
+          command: deploy
+          # The SDK reports under the release the source maps were uploaded as (the commit).
+          vars: |
+            SENTRY_RELEASE
+        env:
+          SENTRY_RELEASE: ${{ github.sha }}
+      - name: Audit live response headers
+        # Up to 12 attempts ten seconds apart: the deploy that first creates the Custom Domain
+        # returns before the new DNS record resolves from the runner.
+        run: pnpm audit:headers --url https://the40thieves.dev --paths /,/404,/nope=404,/og/banner.svg,/codecalc/,/codecalc.md,/AGENTS.md,/.well-known/ai-catalog.json --class static --retries 12 --retry-delay 10000
+      - name: Audit live on-demand response headers
+        # The ssr class is what the middleware stamps (P2-02): /healthz is the health route and
+        # /csp-report answers GET with 405, headers included.
+        run: pnpm audit:headers --url https://the40thieves.dev --paths /healthz,/csp-report=405 --class ssr --retries 3 --retry-delay 10000
+      # The org README (P2-10) is rendered from the manifest this build emitted and committed to
+      # The-40-Thieves/.github as the App, only when its body changed. Contents write is scoped to
+      # that one repository; the hub repository token above stays read-only.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: readme-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: .github
+          permission-contents: write
+          permission-metadata: read
+      - name: Publish the org README
+        run: pnpm render:org-readme --publish
+        env:
+          GITHUB_TOKEN: ${{ steps.readme-token.outputs.token }}
+
+  deploy-rebuild-dispatch:
+    name: deploy-rebuild-dispatch
+    needs: ci
+    runs-on: instabox-medium
+    environment:
+      name: production
+      url: https://hooks.the40thieves.dev/healthz
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The Worker (P2-09) takes verified GitHub and Sanity webhooks on hooks.the40thieves.dev and
+      # sends the repository_dispatch this workflow listens for. Its secrets are pushed from the
+      # environment on every deploy (wrangler secret bulk), so GitHub stays their only store.
+      - name: Deploy the rebuild-dispatch Worker
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/rebuild-dispatch
+          packageManager: pnpm
+          command: deploy
+          secrets: |
+            GITHUB_WEBHOOK_SECRET
+            SANITY_WEBHOOK_SECRET
+            GH_APP_PRIVATE_KEY
+        env:
+          GITHUB_WEBHOOK_SECRET: ${{ secrets.REBUILD_GITHUB_WEBHOOK_SECRET }}
+          SANITY_WEBHOOK_SECRET: ${{ secrets.REBUILD_SANITY_WEBHOOK_SECRET }}
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Check the Worker answers on its domain
+        # Up to 12 attempts ten seconds apart, as for the hub: the first deploy creates the
+        # Custom Domain and its DNS record resolves a little later.
+        run: |
+          for attempt in $(seq 1 12); do
+            if curl -fsS --max-time 10 https://hooks.the40thieves.dev/healthz; then exit 0; fi
+            sleep 10
+          done
+          exit 1
+
+  deploy-preview-gateway:
+    name: deploy-preview-gateway
+    needs: ci
+    runs-on: instabox-medium
+    environment:
+      name: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # Serves the hub's pull request previews on pr-<n>-preview.the40thieves.dev. The upstream suffix
+      # names the account's workers.dev subdomain, so it is a secret pushed on every deploy.
+      - name: Check the suffix secret has the shape the gateway accepts
+        # The value is never printed; a malformed one would turn every preview into a 503.
+        env:
+          PREVIEW_ORIGIN_SUFFIX: ${{ secrets.PREVIEW_ORIGIN_SUFFIX }}
+        run: |
+          if ! printf '%s' "$PREVIEW_ORIGIN_SUFFIX" | grep -qxE -- '-[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev'; then
+            echo "PREVIEW_ORIGIN_SUFFIX is missing or malformed"
+            exit 1
+          fi
+      - name: Deploy the preview-gateway Worker
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/preview-gateway
+          packageManager: pnpm
+          command: deploy
+          secrets: |
+            PREVIEW_ORIGIN_SUFFIX
+        env:
+          PREVIEW_ORIGIN_SUFFIX: ${{ secrets.PREVIEW_ORIGIN_SUFFIX }}
+      - name: Check the Worker answers on its route
+        # The health path is 200 only when the deployed secret is usable, and needs no live alias.
+        run: |
+          for attempt in $(seq 1 12); do
+            if curl -fsS -o /dev/null --max-time 10 https://deploy-check-preview.the40thieves.dev/__gateway/healthz; then exit 0; fi
+            sleep 10
+          done
+          exit 1
+
+  deploy-mcp:
+    name: deploy-mcp
+    # After deploy: the KV documents this Worker serves are uploaded there, from the same build.
+    needs: [ci, deploy]
+    runs-on: instabox-medium
+    environment:
+      name: production
+      url: https://the40thieves.dev/mcp/healthz
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The public read-only MCP server (P3-S1) on the route the40thieves.dev/mcp*: no secrets,
+      # no Access. Its only inputs are the two KV documents and the Rate Limiting binding.
+      - name: Deploy the mcp Worker
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/mcp
+          packageManager: pnpm
+          command: deploy
+      - name: Check the Worker answers on its route
+        # healthz is 503 until KV holds both documents and 404 from the hub until the route
+        # reaches the edge; up to 12 attempts ten seconds apart cover both.
+        run: |
+          for attempt in $(seq 1 12); do
+            if curl -fsS --max-time 10 https://the40thieves.dev/mcp/healthz; then exit 0; fi
+            sleep 10
+          done
+          exit 1
+      - name: Audit live mcp response headers
+        # /mcp/server-card (P3-S3) carries the CORS and cache rules scoped to it, /mcp/webmcp
+        # (P3-S4) its own cache rule. healthz answers from the previous Worker version too, so a
+        # new path waits out edge propagation here: up to 12 attempts ten seconds apart.
+        run: pnpm audit:headers --url https://the40thieves.dev --paths /mcp/healthz,/mcp/nope=404,/mcp/server-card,/mcp/webmcp --class mcp --retries 12 --retry-delay 10000
+      - name: MCP conformance smoke against the live endpoint
+        # A 2026-07-28 client and a 2025-11-25 handshake, one call per tool, 20 kB cap; the AI
+        # Catalog is followed to the Server Card, which must agree with server/discover; the page
+        # tool subset is read from /mcp/webmcp and called once the way a hub page calls it.
+        run: pnpm mcp:smoke --url https://the40thieves.dev
+
+  deploy-relay:
+    name: deploy-relay
+    needs: ci
+    runs-on: instabox-medium
+    environment:
+      name: production
+      url: https://relay.the40thieves.dev/v1/healthz
+    permissions:
+      contents: read
+    steps:
+      # The visitor-key relay (P4-S2) answers 503 not_configured on everything but healthz while
+      # either secret is unset, so a deploy without both is not a finished deploy: stop before
+      # anything changes. Names only; the values are never printed.
+      - name: Check both relay secrets are set
+        env:
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          RELAY_SESSION_SECRET: ${{ secrets.RELAY_SESSION_SECRET }}
+        run: |
+          missing=''
+          if [ -z "$TURNSTILE_SECRET_KEY" ]; then missing="$missing TURNSTILE_SECRET_KEY"; fi
+          if [ -z "$RELAY_SESSION_SECRET" ]; then missing="$missing RELAY_SESSION_SECRET"; fi
+          if [ -n "$missing" ]; then
+            echo "::error::The production environment has no value for:$missing. The relay was not deployed. Add the secret (workers/relay/README.md) and re-run this job."
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The Worker on relay.the40thieves.dev, a Custom Domain declared in its wrangler.jsonc: the
+      # first deploy creates the DNS record and the certificate, as for hooks. Its secrets are
+      # pushed from the environment on every deploy (wrangler secret bulk), as for
+      # rebuild-dispatch, so GitHub stays their only store.
+      - name: Deploy the relay Worker
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/relay
+          packageManager: pnpm
+          command: deploy
+          secrets: |
+            TURNSTILE_SECRET_KEY
+            RELAY_SESSION_SECRET
+        env:
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          RELAY_SESSION_SECRET: ${{ secrets.RELAY_SESSION_SECRET }}
+      # The quota relay (P4-S3) keeps each source on not_configured until the owner registers its
+      # operator key; RELAY_OPERATOR_KEYS is a JSON object of source name to key
+      # (workers/relay/README.md). Optional: without it the deploy goes on and says so.
+      - name: Check for quota relay operator keys
+        id: operator
+        env:
+          RELAY_OPERATOR_KEYS: ${{ secrets.RELAY_OPERATOR_KEYS }}
+        # A value that is set must be a JSON object naming at least one quota source with a
+        # non-empty key; anything else would deploy cleanly and leave every source
+        # not_configured. jq prints true or false (or a parse position), never the value.
+        run: |
+          if [ -z "$RELAY_OPERATOR_KEYS" ]; then
+            echo 'set=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::RELAY_OPERATOR_KEYS is not set: every /v1/quota source answers not_configured.'
+            exit 0
+          fi
+          if ! printf '%s' "$RELAY_OPERATOR_KEYS" | jq -e 'type == "object" and ([to_entries[] | select((.key == "courtlistener" or .key == "guardian" or .key == "ucdp") and (.value | type) == "string" and .value != "")] | length > 0)' > /dev/null; then
+            echo '::error::RELAY_OPERATOR_KEYS is set but is not a JSON object with a non-empty key for courtlistener, guardian or ucdp (workers/relay/README.md). The keys were not pushed.'
+            exit 1
+          fi
+          echo 'set=true' >> "$GITHUB_OUTPUT"
+      - name: Push the quota relay operator keys
+        if: steps.operator.outputs.set == 'true'
+        working-directory: workers/relay
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OPERATOR_KEYS: ${{ secrets.RELAY_OPERATOR_KEYS }}
+        run: printf '%s' "$OPERATOR_KEYS" | pnpm exec wrangler secret put OPERATOR_KEYS
+      # The GitHub secret is the only store: once it is removed, the Worker's copy goes too, so
+      # the quota relay stops using keys nobody holds any more. A 404 means there was none.
+      - name: Remove stale quota relay operator keys
+        if: steps.operator.outputs.set == 'false'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          status="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/relay/secrets/OPERATOR_KEYS")"
+          case "$status" in
+            200) echo '::notice::Removed OPERATOR_KEYS from the relay Worker: RELAY_OPERATOR_KEYS is no longer set.' ;;
+            404) echo 'No OPERATOR_KEYS on the relay Worker.' ;;
+            *) echo "::error::Removing OPERATOR_KEYS from the relay Worker answered HTTP $status."; exit 1 ;;
+          esac
+      - name: Check the Worker answers on its domain and is configured
+        # Up to 12 attempts ten seconds apart: the first deploy creates the Custom Domain and its
+        # DNS record resolves a little later. "Up" is not enough: healthz must say configured.
+        run: |
+          body=''
+          for attempt in $(seq 1 12); do
+            if body="$(curl -fsS --max-time 10 https://relay.the40thieves.dev/v1/healthz)"; then
+              if [ "$(jq -r '.configured' <<<"$body" 2>/dev/null)" = 'true' ]; then
+                echo "$body"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          if [ -z "$body" ]; then
+            echo '::error::https://relay.the40thieves.dev/v1/healthz did not answer after 12 attempts.'
+          else
+            echo "$body"
+            echo '::error::The relay is up but reports configured false: TURNSTILE_SECRET_KEY or RELAY_SESSION_SECRET did not reach the Worker. Check both in the production environment and re-run this job.'
+          fi
+          exit 1
+      - name: Audit live relay response headers
+        # /v1/nope is a 404 only from a configured Worker (an unconfigured one answers 503), so
+        # this also waits out the edge serving an older version.
+        run: pnpm audit:headers --url https://relay.the40thieves.dev --paths /v1/healthz,/v1/nope=404 --class relay --retries 12 --retry-delay 10000
+      - name: Probe the relay's refusals
+        # Each answer must match exactly. No request reaches an upstream: all four are refused
+        # before the relay would dial out, so the allowlisted host in the third is never contacted.
+        # The fourth spends one of this runner address's five session requests a minute on a token
+        # Cloudflare's siteverify refuses.
+        run: |
+          relay='https://relay.the40thieves.dev'
+          site='https://the40thieves.dev'
+          allowed="$(jq -r '[.sources[] | select(.route == "visitor-key-relay") | .hosts[]][0] // empty' data/sources.json)"
+          if [ -z "$allowed" ]; then
+            echo '::error::data/sources.json has no visitor-key-relay host to probe with.'
+            exit 1
+          fi
+          out="$RUNNER_TEMP/relay-probe.json"
+          failed=0
+          probe() {
+            local name="$1" want_status="$2" want_body="{\"error\":\"$3\"}"
+            shift 3
+            rm -f "$out"
+            local status
+            status="$(curl -sS --max-time 10 -o "$out" -w '%{http_code}' "$@" || true)"
+            local body
+            body="$(cat "$out" 2>/dev/null || true)"
+            if [ "$status" = "$want_status" ] && [ "$body" = "$want_body" ]; then
+              echo "ok: $name answered $status $body"
+            else
+              echo "::error::$name: expected $want_status $want_body, got $status $body"
+              failed=1
+            fi
+          }
+          probe 'fetch without Origin' 403 origin_not_allowed "$relay/v1/fetch"
+          probe 'fetch to a host off the allowlist' 403 host_not_allowed \
+            -H "Origin: $site" -H 'X-Relay-Target: https://evil.test/' "$relay/v1/fetch"
+          probe 'fetch without a session' 401 session_required \
+            -H "Origin: $site" -H "X-Relay-Target: https://$allowed/" "$relay/v1/fetch"
+          probe 'session with Turnstile token x' 403 turnstile_failed \
+            -X POST -H "Origin: $site" -H 'Content-Type: application/json' --data '{"token":"x"}' \
+            "$relay/v1/session"
+          exit "$failed"

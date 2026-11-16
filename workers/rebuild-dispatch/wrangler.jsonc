@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rebuild-dispatch",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-10-26",
+  // nodejs_compat: the App helper signs its JWT with node:crypto. global_fetch_strictly_public:
+  // the only outbound call is api.github.com.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "upload_source_maps": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "hooks.the40thieves.dev", "custom_domain": true }],
+  // Every minute: dispatch a trigger that arrived while the debounce lock stood (src/dispatch.ts).
+  "triggers": { "crons": ["* * * * *"] },
+  // Nonces (24 h), the debounce lock (60 s) and the pending trigger (10 min).
+  "kv_namespaces": [{ "binding": "REBUILD_KV", "id": "65536ca576f0402fa4146fa28bba4a5f" }],
+  // Public configuration, not secrets. The secrets GITHUB_WEBHOOK_SECRET, SANITY_WEBHOOK_SECRET
+  // and GH_APP_PRIVATE_KEY are pushed by the deploy job from the repository's secrets.
+  "vars": {
+    "SANITY_DATASET": "the40thieves",
+    "DISPATCH_OWNER": "The-40-Thieves",
+    "DISPATCH_REPO": "the40thieves.dev",
+    "GH_APP_ID": "5593745",
+    "GH_APP_INSTALLATION_ID": "178154584",
+  },
+}

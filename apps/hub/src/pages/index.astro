@@ -1,0 +1,135 @@
+---
+import { getCollection } from 'astro:content';
+
+import Base from '../layouts/Base.astro';
+import { imageUrl } from '../lib/cloudinary.ts';
+import { siteLd } from '../lib/json-ld.ts';
+import { renderPortableText } from '../lib/portable-text.ts';
+
+const entries = (await getCollection('projects')).map((entry) => entry.data);
+const jsonLd = siteLd(entries, __BUILD_INFO__);
+const listed = entries.filter((entry) => entry.listed);
+const unlisted = entries.filter((entry) => !entry.listed);
+const releases = entries
+  .flatMap((entry) => (entry.release ? [{ project: entry, release: entry.release }] : []))
+  .sort((a, b) => b.release.published_at.localeCompare(a.release.published_at))
+  .slice(0, 5);
+const day = (iso: string) => iso.slice(0, 10);
+// The newest published spotlight, if an editor wrote one (P2-11).
+const spotlight = (await getCollection('spotlights'))
+  .map((entry) => entry.data)
+  .sort((a, b) => b.published_at.localeCompare(a.published_at))
+  .at(0);
+const listedSlugs = new Set(listed.map((project) => project.slug));
+const spotlightHref =
+  spotlight?.link ??
+  (spotlight?.project && listedSlugs.has(spotlight.project) ? `/${spotlight.project}/` : null);
+---
+
+<Base title="The 40 Thieves" description="The 40 Thieves. Tools first." jsonLd={jsonLd}>
+  <h1 class="text-4xl font-semibold tracking-tight">The 40 Thieves. Tools first.</h1>
+  <p class="mt-4 text-lg text-ink/80">
+    Open-source developer tools, each with one measured claim and a one-line install.
+  </p>
+
+  {spotlight && (
+    <section aria-labelledby="spotlight" class="mt-10 border-l-4 border-ink/20 pl-4">
+      <h2 class="text-sm font-semibold tracking-wide text-ink/70 uppercase" id="spotlight">
+        Spotlight
+      </h2>
+      {spotlight.image && (
+        <img
+          class="mt-3 h-auto w-full rounded"
+          src={imageUrl(spotlight.image.public_id, 1200)}
+          alt={spotlight.image.alt}
+          width={spotlight.image.width ?? undefined}
+          height={spotlight.image.height ?? undefined}
+        />
+      )}
+      <p class="mt-1 text-xl font-semibold">
+        {spotlightHref ? (
+          <a class="underline underline-offset-4 hover:no-underline" href={spotlightHref}>
+            {spotlight.title}
+          </a>
+        ) : (
+          spotlight.title
+        )}
+      </p>
+      <p class="mt-1 text-ink/80">{spotlight.summary}</p>
+      {spotlight.body && (
+        <div class="release-notes mt-2" set:html={renderPortableText(spotlight.body)} />
+      )}
+      <p class="mt-1 text-sm text-ink/70">
+        <time datetime={spotlight.published_at}>{day(spotlight.published_at)}</time>
+      </p>
+    </section>
+  )}
+
+  <section aria-labelledby="projects" class="mt-10">
+    <h2 class="text-xl font-semibold" id="projects">
+      Projects
+    </h2>
+    <ul class="mt-4 space-y-4">
+      {listed.map((project) => (
+        <li>
+          <a
+            class="text-lg underline underline-offset-4 hover:no-underline"
+            href={`/${project.slug}/`}
+          >
+            {project.name}
+          </a>
+          <p class="mt-1 text-ink/80">{project.hub?.tagline ?? project.description}</p>
+          <p class="mt-1 text-sm">
+            <a class="underline underline-offset-2" href={project.url} rel="noopener">
+              GitHub
+            </a>
+          </p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  {releases.length > 0 && (
+    <section aria-labelledby="releases" class="mt-10">
+      <h2 class="text-xl font-semibold" id="releases">
+        Latest releases
+      </h2>
+      <ul class="mt-4 space-y-2">
+        {releases.map(({ project, release }) => (
+          <li>
+            <a class="underline underline-offset-2" href={release.url} rel="noopener">
+              {project.name} {release.tag}
+            </a>
+            <span class="text-ink/70"> {day(release.published_at)}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-2 text-sm">
+        <a class="underline underline-offset-2" href="/releases.xml">
+          RSS feed
+        </a>{' '}
+        <a class="underline underline-offset-2" href="/changelog/">
+          Changelog
+        </a>
+      </p>
+    </section>
+  )}
+
+  {unlisted.length > 0 && (
+    <section aria-labelledby="more" class="mt-10">
+      <h2 class="text-xl font-semibold" id="more">
+        Also on GitHub
+      </h2>
+      <ul class="mt-4 space-y-1">
+        {unlisted.map((project) => (
+          <li>
+            <a class="underline underline-offset-2" href={project.url} rel="noopener">
+              {project.name}
+            </a>
+            {project.description && <span class="text-ink/70"> {project.description}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

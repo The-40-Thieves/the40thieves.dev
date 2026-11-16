@@ -1,0 +1,7 @@
+# osv-scanner reads this file from the directory of the scanned lockfile (pnpm-lock.yaml).
+# Every entry needs an expiry and a reason; an expired entry fails the scan again.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-12-31
+reason = "minimatch 10.2.6 is reached only through @eslint/config-array (lint-time, trusted glob patterns from our own config). The fix is minimatch 11, a major bump that has to arrive through eslint; Renovate tracks it."

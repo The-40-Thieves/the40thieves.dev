@@ -1,0 +1,529 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+    # deploy.yml runs this workflow on pushes to main. Reusable workflows do not see the
+    # caller's repository secrets unless the caller passes them, so every secret a job here
+    # needs on main is declared in this contract and mapped in deploy.yml's `ci` job.
+    secrets:
+      GH_APP_ID:
+        description: App ID of the40thieves-bot
+        required: true
+      GH_APP_PRIVATE_KEY:
+        description: PEM private key of the40thieves-bot
+        required: true
+      CLOUDFLARE_DRIFT_TOKEN:
+        description: Read-only Cloudflare token for the edge-config drift check
+        required: true
+      SANITY_READ_TOKEN:
+        description: Viewer token for the Sanity dataset the40thieves (optional while it is public)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: '0'
+
+jobs:
+  check:
+    name: check
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # `$/` resolves to this repository at the running commit, so the composite action and the
+      # reusable workflow never need a ref. GitHub changelog, 2026-07 (runner 2.336.0 or newer):
+      # https://github.blog/changelog/2026-07-01-reference-same-repository-actions-with-self-repository-syntax/
+      - uses: $/.github/actions/setup
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: the40thieves.dev
+          permission-contents: read
+          permission-metadata: read
+      - run: pnpm typecheck
+        env:
+          # `astro check` syncs the content layer, so the GitHub loader runs here too, as the App.
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm check:headers
+      - run: pnpm check:manifest-schema
+
+  build:
+    name: build
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The loader reads as the App (P2-03), downscoped to contents and metadata read.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: the40thieves.dev
+          permission-contents: read
+          permission-metadata: read
+      - run: pnpm build
+        env:
+          # The GitHub loader reads the org's public repositories over GraphQL (one query, 1 point).
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: dist
+          # Client and server output: the audit job's build-output tests read the generated
+          # dist/server/wrangler.json and walk all of dist for source maps (P2-12).
+          path: apps/hub/dist
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  audit:
+    name: audit
+    needs: build
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: dist
+          path: apps/hub/dist
+      - run: pnpm audit:headers --dist apps/hub/dist/client
+      - run: pnpm --filter hub test
+      - name: Check links in the built site
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          # Built pages use root-relative links (/_astro/..., /); --root-dir maps them onto dist.
+          args: --offline --no-progress --config lychee.toml --root-dir ${{ github.workspace }}/apps/hub/dist/client 'apps/hub/dist/client/**/*.html'
+          fail: true
+
+  e2e:
+    name: e2e
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # A full build, not the dist artifact: wrangler dev needs the generated server entry in
+      # dist/server as well as the assets in dist/client.
+      - run: pnpm build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+      - name: Install the Chromium headless shell
+        run: pnpm --filter hub exec playwright install --with-deps chromium
+      - name: Run Playwright and axe against wrangler dev
+        # playwright.config.ts starts `wrangler dev` on the built site; axe must report zero
+        # serious or critical violations and every install snippet must copy exactly.
+        run: pnpm --filter hub e2e
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/hub/playwright-report
+          retention-days: 7
+
+  # P3-S5: every agent surface checked on one origin. The hub and the mcp Worker run in local
+  # workerd behind scripts/agent-stack.ts (no Cloudflare credentials, nothing remote), and
+  # scripts/conformance.ts checks both SDK generations, one call per tool, the page cap, the rate
+  # limit, the version header, the Server Card, the AI Catalog, the Markdown twins, the manifest
+  # contract over HTTP and the page tools in a real browser. The drift report is the artifact.
+  conformance:
+    name: conformance
+    needs: build
+    runs-on: instabox-medium
+    # Acceptance (P3-S5): under five minutes, install included. The suite itself takes about
+    # ten seconds once the stack is up. deploy.yml needs the whole of this workflow, so on main a
+    # red run here stops the deploy, like any other job in this file.
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The artifact is enough: the stack starts the hub from dist/server/wrangler.json and seeds
+      # the Worker's KV from dist/client, so what is checked is the build the other jobs audit.
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: dist
+          path: apps/hub/dist
+      - name: Install the Chromium headless shell
+        run: pnpm --filter hub exec playwright install --with-deps chromium
+      - name: Run the agent-surface conformance suite
+        run: pnpm conformance --local --browser --report conformance-report
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: conformance-report
+          path: conformance-report
+          retention-days: 14
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: failure()
+        with:
+          name: conformance-playwright-report
+          path: apps/hub/playwright-report
+          retention-days: 7
+
+  supply-chain:
+    name: supply-chain
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: $/.github/actions/setup
+      - name: Scan git history for committed secrets
+        # The gitleaks CLI (MIT) instead of gitleaks-action, which needs a per-repository license
+        # on organisation repos. The release's published checksums verify the download.
+        env:
+          # renovate: datasource=github-releases depName=gitleaks/gitleaks extractVersion=^v(?<version>.+)$
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          dir="$(mktemp -d)"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl -fsSL -o "${dir}/gitleaks.tar.gz" "${base}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL -o "${dir}/checksums.txt" "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          (cd "${dir}" && grep " gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz\$" checksums.txt | sed 's/ .*/  gitleaks.tar.gz/' | sha256sum --check --strict -)
+          tar -xzf "${dir}/gitleaks.tar.gz" -C "${dir}" gitleaks
+          # Only the history of the checked-out commit. Without --log-opts gitleaks scans every
+          # fetched ref, so a branch whose allowlist entry is not on main yet fails runs on main.
+          "${dir}/gitleaks" git --config .gitleaks.toml --redact --no-banner --exit-code 1 --log-opts="HEAD" .
+      - name: Audit workflow definitions
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          # Only the real workflows and actions; tests/fixtures/github holds deliberately
+          # unpinned files that exercise scripts/check-pinned-actions.ts.
+          inputs: .github
+          advanced-security: false
+          min-severity: low
+      - run: pnpm check:actions
+
+  licenses:
+    name: licenses
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # Every package in pnpm-lock.yaml against security/licenses.policy.json.
+      # The free stand-in for the dependency-review action, which needs
+      # the Code Security add-on on a private repository; osv-scanner covers vulnerabilities.
+      - run: pnpm check:licenses
+
+  osv-scanner:
+    name: osv-scanner
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
+    with:
+      scan-args: --lockfile=./pnpm-lock.yaml
+      fail-on-vuln: true
+      upload-sarif: false
+      # The reusable workflow's own input, not a job key (a `uses:` job cannot set runs-on); it
+      # defaults to ubuntu-latest, and the repository has no GitHub-hosted minutes left.
+      runs-on: instabox-medium
+
+  test:
+    name: test
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: pnpm test
+
+  # P2-03 acceptance: the App mints its own token, answers `viewer` as the bot, and its write
+  # permission stops at the repositories it is installed on (both probes are side-effect free).
+  github-app:
+    name: github-app
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: node scripts/github-app-check.ts
+        env:
+          GH_APP_ID: ${{ secrets.GH_APP_ID }}
+          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+  # P2-13 edge-config drift: the live DNS, WAF custom and managed rules, redirect rules, Worker
+  # routes, DNSSEC, HSTS zone setting and AI crawler policy of the .dev and .tech zones must equal
+  # infra/cloudflare/. A dashboard change fails here within one run.
+  edge-config:
+    name: edge-config
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: node scripts/edge-config.ts --check
+        env:
+          CLOUDFLARE_DRIFT_TOKEN: ${{ secrets.CLOUDFLARE_DRIFT_TOKEN }}
+
+  lighthouse:
+    name: lighthouse
+    needs: build
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: dist
+          path: apps/hub/dist
+      - name: Run Lighthouse CI against the built site
+        # Fetched on demand so Lighthouse's dependency tree (puppeteer and friends) stays out of
+        # pnpm-lock.yaml and out of the osv-scanner results.
+        env:
+          # renovate: datasource=npm depName=@lhci/cli
+          LHCI_VERSION: 0.15.1
+        run: pnpm dlx "@lhci/cli@${LHCI_VERSION}" autorun --config=lighthouserc.cjs
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: lighthouse
+          path: .lighthouseci
+          # The directory is dot-prefixed; without this the upload finds nothing.
+          include-hidden-files: true
+          retention-days: 7
+
+  preview:
+    name: preview
+    needs: [audit, test, supply-chain, e2e, lighthouse]
+    # Only on pull requests (deploy.yml calls this workflow on push, so the event name already
+    # excludes it). An `inputs.preview` guard used to sit here, but `inputs` is empty on a
+    # pull_request run and `'' != false` evaluates false, which skipped the job every time.
+    if: github.event_name == 'pull_request' && github.actor != 'renovate[bot]'
+    runs-on: instabox-medium
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PR_NUMBER: ${{ github.event.number }}
+    outputs:
+      url: ${{ steps.upload.outputs.url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # The loader reads as the App (P2-03), downscoped to contents and metadata read.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: the40thieves.dev
+          permission-contents: read
+          permission-metadata: read
+      - run: pnpm build
+        env:
+          # The GitHub loader reads the org's public repositories over GraphQL (one query, 1 point).
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+      - name: Upload a preview version of the hub Worker
+        id: upload
+        # The alias answers on the account's workers.dev subdomain, which must not appear in
+        # public logs or comments: wrangler's output stays in a file, and only a redacted copy is
+        # printed when the upload fails. The preview-gateway Worker serves the alias on .dev.
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Previews share the Worker config, so the Sentry environment is overridden per upload.
+          if ! pnpm --filter hub exec wrangler versions upload --preview-alias "pr-${PR_NUMBER}" --var SENTRY_ENVIRONMENT:preview > upload.txt 2>&1; then
+            sed -E 's/[A-Za-z0-9.-]+\.workers\.dev/<redacted>.workers.dev/g' upload.txt
+            exit 1
+          fi
+          grep -qE "https://pr-${PR_NUMBER}-hub\.[A-Za-z0-9-]+\.workers\.dev" upload.txt
+          rm upload.txt
+          url="https://pr-${PR_NUMBER}-preview.the40thieves.dev"
+          # The alias can take a few seconds to reach the edge.
+          for attempt in $(seq 1 12); do
+            if curl -fsS -o /dev/null --max-time 10 "${url}/"; then break; fi
+            if [ "$attempt" = 12 ]; then echo "${url} did not answer"; exit 1; fi
+            sleep 10
+          done
+          echo "PREVIEW_URL=${url}" >> "$GITHUB_ENV"
+          echo "url=${url}" >> "$GITHUB_OUTPUT"
+      - name: Comment the preview URL on the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none             --body "Preview: ${PREVIEW_URL}"
+
+  zap:
+    name: zap
+    needs: preview
+    # Any alert not triaged in .zap/rules.tsv fails the job; the
+    # first scan reported Low and Informational alerts only, all triaged with reasons.
+    if: needs.preview.result == 'success'
+    runs-on: instabox-medium
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ZAP baseline scan of the preview deployment
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: ${{ needs.preview.outputs.url }}
+          rules_file_name: .zap/rules.tsv
+          allow_issue_writing: false
+          fail_action: true
+          artifact_name: zap-baseline
+
+  # P4-S2: an active ZAP API scan of the visitor-key relay, from workers/relay/openapi.json. The
+  # stack (scripts/relay-stack.ts) runs the production handler in local workerd with test secrets
+  # and a mock upstream on loopback as the only allowed host (workers/relay/tests/stack-entry.ts),
+  # so nothing the scan sends can reach a real host. Any High alert fails the job; deploy.yml needs
+  # the whole of this workflow, so on main a red run here stops the deploy.
+  relay-zap:
+    name: relay-zap
+    runs-on: instabox-medium
+    timeout-minutes: 15
+    env:
+      # Nothing leaves the runner but the image pull and the pinned actions.
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - name: Start the relay stack
+        # Left running for the later steps; the runner stops it when the job ends. The mock
+        # upstream rewrites relay-mock-count.txt with the number of requests it has answered.
+        run: |
+          pnpm relay-stack --count-file relay-mock-count.txt > relay-stack.log 2>&1 &
+          pid=$!
+          for _ in $(seq 1 150); do
+            if grep -q '^relay-stack: ready ' relay-stack.log; then exit 0; fi
+            if ! kill -0 "$pid" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          cat relay-stack.log
+          exit 1
+      - name: Mint a session and relay one request to the mock upstream
+        id: session
+        # The Turnstile token is Cloudflare's test token and the stack signs with a published
+        # literal, so this session is worth nothing outside the stack.
+        run: |
+          origin=http://127.0.0.1:8795
+          session="$(curl -fsS -X POST -H "Origin: ${origin}" -H 'Content-Type: application/json' \
+            --data '{"token":"XXXX.DUMMY.TOKEN.XXXX"}' "${origin}/v1/session" | jq -er .session)"
+          echo "session=${session}" >> "$GITHUB_OUTPUT"
+          curl -fsS -H "Origin: ${origin}" -H "X-Relay-Session: ${session}" \
+            -H 'X-Relay-Target: https://upstream.test/ok' "${origin}/v1/fetch" | jq -e '.upstream == "mock"'
+      - name: ZAP API scan of the relay stack
+        uses: zaproxy/action-api-scan@5158fe4d9d8fcc75ea204db81317cce7f9e5453d # v0.10.0
+        with:
+          target: workers/relay/openapi.json
+          format: openapi
+          # The next step decides: it fails on any High. The action's own artifact is kept too.
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: relay-zap-action
+          # Replacer rules put the allowed Origin and the session on every request the scan sends;
+          # the active scan is capped so a slow rule cannot hold the deploy.
+          cmd_options: >-
+            -O http://127.0.0.1:8795 -I
+            -z "-config replacer.full_list(0).description=origin
+            -config replacer.full_list(0).enabled=true
+            -config replacer.full_list(0).matchtype=REQ_HEADER
+            -config replacer.full_list(0).matchstr=Origin
+            -config replacer.full_list(0).regex=false
+            -config replacer.full_list(0).replacement=http://127.0.0.1:8795
+            -config replacer.full_list(1).description=session
+            -config replacer.full_list(1).enabled=true
+            -config replacer.full_list(1).matchtype=REQ_HEADER
+            -config replacer.full_list(1).matchstr=X-Relay-Session
+            -config replacer.full_list(1).regex=false
+            -config replacer.full_list(1).replacement=${{ steps.session.outputs.session }}
+            -config scanner.maxScanDurationInMins=8"
+      - name: Fail on any High alert
+        run: |
+          test -s report_json.json
+          jq -r '.site[]?.alerts[]? | select((.riskcode|tostring) == "3") | "High: \(.pluginid) \(.name)"' report_json.json
+          jq -e '[.site[]?.alerts[]? | select((.riskcode|tostring) == "3")] | length == 0' report_json.json
+      - name: The scan reached the upstream
+        # Proof the scan got past the origin and session checks. A scan whose requests are all
+        # refused (replacer rules not applied, an import that failed) leaves the count at 1, the
+        # request the session step relayed; a full scan answered 253 in a trial run.
+        run: |
+          count="$(cat relay-mock-count.txt)"
+          if ! [[ "$count" =~ ^[0-9]+$ ]]; then
+            echo "relay-mock-count.txt does not hold a count"
+            exit 1
+          fi
+          echo "the mock upstream answered ${count} requests"
+          if [ "$count" -lt 20 ]; then
+            echo "fewer than 20: the scan did not get past the relay's checks to the upstream"
+            exit 1
+          fi
+      - name: The stack still answers after the scan
+        run: curl -fsS http://127.0.0.1:8795/v1/healthz | jq -e '.ok == true'
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: relay-zap
+          path: |
+            report_json.json
+            report_md.md
+            report_html.html
+            relay-stack.log
+            relay-mock-count.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  semgrep:
+    name: semgrep
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Semgrep with the ci ruleset and the repo's own rules
+        # The Semgrep app's own scan carries the registry policy; this job is the gate that runs
+        # without an app token: p/ci plus .semgrep (postMessage origin check, fetch host allowlist).
+        env:
+          # renovate: datasource=pypi depName=semgrep
+          SEMGREP_VERSION: 1.182.1
+          SEMGREP_SEND_METRICS: 'off'
+        # Excluded rules: the mutable-action-tag rule does not know the `$/` self-repository syntax
+        # (zizmor and check:actions already enforce SHA pins and understand it); the npm
+        # minimum-release-age rule reads .npmrc, while this workspace sets pnpm's
+        # minimumReleaseAge in pnpm-workspace.yaml.
+        run: |
+          pipx run --spec "semgrep==${SEMGREP_VERSION}" semgrep scan             --config p/ci --config .semgrep --error --metrics=off             --exclude-rule yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag             --exclude-rule package_managers.npm.npm-missing-minimum-release-age.npm-missing-minimum-release-age

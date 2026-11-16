@@ -1,0 +1,53 @@
+{
+  "name": "the40thieves.dev",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "build": "pnpm --filter hub build",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json && pnpm -r --if-present typecheck",
+    "gen:headers": "node scripts/gen-headers.ts",
+    "check:headers": "node scripts/gen-headers.ts --check",
+    "audit:headers": "node scripts/audit-headers.ts",
+    "check:actions": "node scripts/check-pinned-actions.ts",
+    "mcp:smoke": "node scripts/mcp-smoke.ts",
+    "agent-stack": "node scripts/agent-stack.ts",
+    "conformance": "node scripts/conformance.ts",
+    "relay-stack": "node scripts/relay-stack.ts",
+    "check:linux": "node scripts/linux-check.ts",
+    "probe:sources": "node scripts/probe-sources.ts",
+    "check:sources": "node scripts/probe-sources.ts --check",
+    "gen:manifest-schema": "node scripts/gen-manifest-schema.ts",
+    "check:manifest-schema": "node scripts/gen-manifest-schema.ts --check",
+    "check:licenses": "node scripts/check-licenses.ts",
+    "edge-config:export": "node scripts/edge-config.ts",
+    "edge-config:check": "node scripts/edge-config.ts --check",
+    "render:org-readme": "node scripts/render-org-readme.ts"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "catalog:",
+    "@modelcontextprotocol/sdk": "catalog:",
+    "@the40thieves/config": "workspace:*",
+    "@sentry/cli": "catalog:",
+    "@the40thieves/github": "workspace:*",
+    "@the40thieves/manifest": "workspace:*",
+    "@the40thieves/schemas": "workspace:*",
+    "@types/node": "26.6.5",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
+    "eslint": "10.13.0",
+    "eslint-plugin-astro": "3.2.1",
+    "minisearch": "catalog:",
+    "prettier": "3.9.10",
+    "prettier-plugin-astro": "1.1.2",
+    "typescript": "catalog:",
+    "typescript-eslint": "8.72.0",
+    "vitest": "catalog:"
+  }
+}

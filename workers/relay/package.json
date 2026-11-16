@@ -1,0 +1,19 @@
+{
+  "name": "@the40thieves/relay",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Worker on relay.the40thieves.dev: forwards browser requests to the hosts on the visitor-key-relay allowlist (P4-S2).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@the40thieves/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

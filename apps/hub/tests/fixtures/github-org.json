@@ -1,0 +1,464 @@
+{
+  "data": {
+    "organization": {
+      "repositories": {
+        "totalCount": 9,
+        "nodes": [
+          {
+            "name": "aetheris-rs",
+            "description": null,
+            "url": "https://github.com/The-40-Thieves/aetheris-rs",
+            "homepageUrl": null,
+            "stargazerCount": 0,
+            "isArchived": false,
+            "licenseInfo": null,
+            "repositoryTopics": {
+              "nodes": []
+            },
+            "defaultBranchRef": {
+              "name": "master",
+              "target": {
+                "oid": "826b33fe0ba5a05a3003e7ee5e42a92ccc64f1ac",
+                "committedDate": "2026-07-09T10:18:00Z"
+              }
+            },
+            "latestRelease": null,
+            "readme": {
+              "text": "# Aetheris Telemetry\n\nAetheris is a cross-platform machine-telemetry client built with Rust and Tauri.\nIt combines standard hardware monitoring with predictive endurance analytics,\nper-process egress attribution, and local LLM inference observability.\n\n> **Honesty note.** Aetheris was refactored to remove features that were\n> previously hardcoded mocks. This README describes what is **implemented and\n> verified** vs. what is **planned**. Where a feature depends on hardware or an\n> OS not available for testing, that is called out explicitly.\n\n## Implemented\n\n### Hardware telemetry\n- **CPU / memory / swap / network / processes / sensors** via `sysinfo`, refreshed\n  live each poll.\n- **GPU** — NVIDIA (`nvidia-smi` CSV), AMD (`rocm-smi --json`, with an `amd-smi`\n  fallback), Apple Silicon (`powermetrics` plist, active residency = 1 − idle).\n  VRAM is normalised to bytes; unknown metrics report `null`, not a fake `0`.\n  Parsers are unit-tested against captured sample output; live values require the\n  respective GPU/OS.\n- **SMART endurance** — reads `smartctl -j`, branching by device class: NVMe\n  (`data_units_written`) **and** SATA (`Total_LBAs_Written`, id 241/246, plus the\n  Intel `Host_Writes_32MiB` and Kingston `Lifetime_Writes_GiB` unit variants).\n  Previously SATA drives silently reported 0 bytes written.\n- **Battery** — state-of-health, charge, and cycle count via `starship-battery`.\n\n### Predictive RUL (Remaining Useful Life)\n- Samples (SSD bytes written, battery SOH) are \n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": null,
+            "mcpb": null
+          },
+          {
+            "name": "alexandria-mcp",
+            "description": "152-source digital library MCP server. Natural-language search, full-text reading, and cited answers across academic papers, books, law, government records, security advisories, news, and developer docs.",
+            "url": "https://github.com/The-40-Thieves/alexandria-mcp",
+            "homepageUrl": "https://github.com/The-40-Thieves/alexandria-mcp",
+            "stargazerCount": 3,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "MIT"
+            },
+            "repositoryTopics": {
+              "nodes": [
+                {
+                  "topic": {
+                    "name": "claude"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "gemini-cli-extension"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp-server"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "model-context-protocol"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "research"
+                  }
+                }
+              ]
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "5950776733a3636cd5e3457f6536bda7f351c55c",
+                "committedDate": "2026-10-28T10:16:31Z"
+              }
+            },
+            "latestRelease": {
+              "tagName": "v11.0.0",
+              "name": "Alexandria 11.0.0",
+              "publishedAt": "2026-09-05T08:58:24Z",
+              "description": "\n### Added\n\n- Server instructions: the MCP `initialize` response now carries an\n  `instructions` block that tells clients which tool to reach for first\n  (`library_ask`), when to use the targeted and synthesis tools, and how the\n  `response_format` parameter works. (Task 1)\n- `outputSchema` on every tool, so clients can validate and render structured\n  results instead of parsing free text. (Task 1)\n- `response_format: \"concise\" | \"detailed\"` on `library_ask`,\n  `library_search`, `library_answer`, `library_research`, and\n  `library_health_check`. `concise` is the default and trims results and\n  citations to the high-signal fields; `detailed` returns the full payload\n  including routing reasons, scores, per-stage diagnostics, and per-source\n  error rate, latency, and quota usage. (Task 1)\n- Progress notifications on `library_answer` and `library_ingest`, emitted\n  when the client supplies a `progressToken`. (Task 1)\n- `library_health_check(source?, cluster?)`: reports per-source health\n  (`ok`, `degraded`, `down`, `key_missing`, `unknown`), merging this\n  process's live error rate and latency with the last off-process probe run.\n  Tool count goes from 9 to 10 at this point; `library_citations` lands in a\n  later task for 11. (Task 2)\n- A per-process read cache keyed by source freshness: repeated\n  `library_read` calls for the same item within a source's freshness window\n  are served from memory instead of refetching. (Task 2)\n- `ingestPolicy` on every source (allowed, attribution, timeboxed,\n  forbidden), surfaced in `library_list_sources` and `docs/sources.md`.\n  `library_ingest` refuses forbidden and timeboxed sources (the latter\n  unless `ALEXANDRIA_INGEST_TIMEBOXED=1`) and stamps license, attribution,\n  and expiry metadata on chunks. (Task 3)\n- Eight new sources with fixture tests and golden queries: wikipedia\n  (search and read, CC BY-SA attribution), wikidata (entity search),\n  crossref (works search, DOI read with references and BibTeX by content\n  negotiation, polite pool via `CONTACT_EMAIL`), pubmed (E-utilities, PMC\n  BioC full text when a PMCID exists), medrxiv, secedgar (full-text search,\n  filing read through the guarded fetch tier, identified User-Agent),\n  worldbank (indicator search and recent series), and datacite (dataset DOI\n  search). (Task 4)\n- Seven more new sources with fixture tests and golden queries: hal (Solr\n  search, PDF links), hansard (UK debates), eurlex (CELLAR), bls (Public\n  Data API v2, free key optional), dblp, opencitations (citations and\n  references by DOI, also the fallback for `library_citations`), and\n  readthedocs (server-side search v3 with a `project:` prefix). (Task 5)\n- A PDF tier in the fetch chain (`unpdf`) with per-page text and page\n  anchors on `ReadResult.pages`. An open-access fallback chain for\n  metadata-only reads that carry a DOI: OpenAlex's best OA location, then\n  PMC BioC full text, then CORE (with a key), then fatcat's archived PDF;\n  every hop passes the SSRF guard. (Task 6)\n- `library_citations(id, source, direction, limit?, format?)` (tool 11):\n  resolves a seed `(id, source)` to a DOI or OpenAlex id, walks `references`\n  (batched `referenced_works`) or `citations` (`works?filter=cites:`), with\n  OpenCitations as the fallback when OpenAlex has no record.\n  `format: \"bibtex\" | \"ris\" | \"apa\"` returns a bibliography for the seed and\n  results, preferring Crossref content negotiation for BibTeX when a DOI\n  exists. Tool count goes from 10 to 11. (Task 7)\n- `npm run eval:answer`: runs `library_answer` over a 20-question golden set\n  (`eval/answer-golden.yaml`) and scores citation precision, nugget recall,\n  and URL/DOI resolvability; prints a table and a machine-readable last\n  line. `docs/answer-eval.md` records the first baseline. (Task 8)\n- A `verify` provider role (falls back to the synth provider): each cited\n  sentence is checked against its cited chunk with a warrant-strength\n  rubric, unsupported markers are removed, and over-strength claims are\n  warned. URL and DOI liveness checks (24h cache, at most 20 per answer) set\n  `citations[].resolves`. Citation grades A to D from source tier,\n  retraction status (OpenAlex batch lookup), citation counts, year, full-text\n  verification, and the research chain check; retracted work is graded D\n  with a warning. Citations now carry a `url` field. (Task 9)\n- `rerank()` with three backends behind one interface: `llm` (listwise over\n  a shuffled top 20), `cohere` (Cohere-shape `/rerank`), and `workers-ai`\n  (Cloudflare bge-reranker-base shape). `ALEXANDRIA_RERANK` selects\n  `off | llm | cohere | workers-ai`; `ALEXANDRIA_RERANK_POOL` (default 60)\n  bounds the RRF pool passed to the reranker. Margin-gated multi-query in\n  `library_ask` (`ALEXANDRIA_MULTI_QUERY=1`, off by default): two alternate\n  phrasings from the router role when stage-1 margin is below the skip\n  margin. (Task 10)\n- `library_research` outlines 3 to 7 coverage objectives before round 1,\n  marks them covered after each round, and stops when all are covered or\n  the existing depth, breadth, and time limits run out; `objectives` and\n  `coverage` appear in detailed output. Chunks embed with a title and\n  section-heading prefix (`ALEXANDRIA_CHUNK_PREFIX=off` disables it). OCR\n  quality is now the minimum of the clean-character ratio and a lexicon-hit\n  ratio over a bundled 5,000-word list. (Task 11)\n- `VectorStoreProvider.query()` and a `match_knowledge_chunks` SQL function\n  with an HNSW index (`docs/sql/match_chunks.sql`; replaces ivfflat).\n  **`docs/sql/match_chunks.sql` has not been verified against a live\n  database.** Run it on a staging project first: it drops and recreates the\n  index, and an HNSW build over an existing corpus is neither instant nor\n  free.\n  `corpusSearch()` embeds the query and returns already-ingested chunks\n  above `ALEXANDRIA_CORPUS_MIN_SIM` (default 0.92) for static and daily\n  sources only, folded into `library_answer` as one more fused list;\n  `readTopSources` skips the adapter read for corpus hits. (Task 12)\n- Origin and host-header validation plus a per-client-IP token bucket on\n  `/mcp` (`ALEXANDRIA_ALLOWED_ORIGINS`, `ALEXANDRIA_HTTP_RATE_LIMIT`,\n  default 60 per minute). (Task 13)\n- Three prompts, surfaced by MCP clients as slash commands:\n  `literature_review(topic, depth?)`, `fact_check_claim(claim)`, and\n  `verify_bibliography(references)`. A `library://doc/{source}/{id}`\n  resource template returning read text through the same open-access\n  fallback as `library_read`; search results in detailed mode carry\n  `resource_link` items for full-text results. (Task 14)\n- `docs/cloudflare.md`: the hybrid verdict on why the Node core stays off\n  Workers, env-only recipes for AI Gateway on the LLM roles, Workers AI\n  bge-m3 embeddings and the bge-reranker-base backend, Tunnel plus Access\n  for a private `/mcp` and WAF rate limiting for a public one, R2 as an\n  optional text store, and what a full port would cost. A fourth fetch\n  tier, Cloudflare Browser Run's REST `/markdown`, used only when\n  `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_BROWSER_RUN_TOKEN` are set; the\n  target passes the SSRF guard first and the response is capped.\n  `ALEXANDRIA_TRUSTED_PROXY=1`: the `/mcp` rate limiter keys on\n  `CF-Connecting-IP`, then the rightmost `X-Forwarded-For` entry, else the\n  socket address; off by default. (Task 15)\n\n### Changed (BREAKING)\n\n- `/mcp` Host-header validation now applies only when\n  `ALEXANDRIA_ALLOWED_ORIGINS` is set. Applied unconditionally it returned\n  `403` for every request to any deployment that had not set the variable,\n  because such a deployment's own `Host` header is in no allowlist when\n  there is no allowlist. Remedy: set `ALEXANDRIA_ALLOWED_ORIGINS` to the\n  hostname(s) this deployment is reached by, which turns Host validation\n  back on and is what the startup warning asks for. The `Origin` check is\n  unchanged and still rejects any request whose `Origin` header names a\n  hostname outside the list.\n- `POST /mcp` with a media type other than `application/json` is now\n  answered `415` by this server, and any POST body over the 100 KiB cap is\n  answered `413` (it was `500`) with the connection closed. Previously a\n  non-JSON POST skipped the cap entirely and the SDK buffered the whole\n  request before answering.\n\n### Changed\n\n- Tool descriptions describe what a tool does and when to call it; the\n  return-shape prose that used to live in descriptions moved into each tool's\n  `outputSchema` and the server instructions. (Task 1)\n- The default response for the five tools above is now `concise`; callers\n  that depended on the previous full payload must pass\n  `response_format: \"detailed\"`. This is the breaking change behind the major\n  version bump. (Task 1)\n- The Papers with Code description now states it queries the community\n  mirror at paperswithcode.co; CourtListener's daily cap is now 125. (Task 3)\n- `ReadResult.unavailable` now carries a discriminated reason and the tiers\n  tried, instead of an empty string. (Task 6)\n- HTML extraction (linkedom plus Defuddle) now runs in a\n  `node:worker_threads` worker with a 30 second job timeout and an in-thread\n  fallback, so a concurrent `/health` answers within tens of milliseconds\n  during a multi-second extraction instead of blocking. The defuddle tier\n  now asks for `text/markdown` first and uses a markdown response directly.\n  The fetch User-Agent is now honest (`Alexandria/<version> (+repo)`, with\n  an `ALEXANDRIA_FETCH_UA` override) instead of impersonating a browser.\n  (Task 13)\n- `/mcp` is now served by `createMcpHandler` with a legacy stateless\n  fallback, so one endpoint speaks both the 2026-07-28 protocol and the\n  earlier one; stdio uses the same server factory. (Task 14)\n\n### Removed\n\n- Return-shape documentation from tool description strings (superseded by\n  `outputSchema`). (Task 1)\n- HathiTrust (its Data API was retired 2024-07-17). (Task 3)\n- SciELO, added then dropped in the same task after both upstreams were\n  verified unusable for live search (a JS proof-of-work bot shield on\n  search.scielo.org, no text search in ArticleMeta). (Task 5)\n- The dedicated GitHub Packages publish workflow (`npm.pkg.github.com`);\n  releases now publish to npmjs.org with provenance instead. (Task 16)\n\n### Fixed\n\n- (none recorded for Tasks 1 through 15.)\n\n",
+              "url": "https://github.com/The-40-Thieves/alexandria-mcp/releases/tag/v11.0.0",
+              "isPrerelease": false
+            },
+            "readme": {
+              "text": "# Alexandria\n\n[![npm version](https://img.shields.io/npm/v/@the-40-thieves/alexandria-mcp.svg)](https://www.npmjs.com/package/@the-40-thieves/alexandria-mcp)\n[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)\n[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/The-40-Thieves/alexandria-mcp?utm_source=badge)\n[![Install in Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](cursor://anysphere.cursor-deeplink/mcp/install?name=alexandria&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0aGUtNDAtdGhpZXZlcy9hbGV4YW5kcmlhLW1jcCJdfQ==)\n[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=alexandria&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40the-40-thieves%2Falexandria-mcp%22%5D%7D)\n[Install in Goose](goose://extension?cmd=npx&arg=-y&arg=%40the-40-thieves%2Falexandria-mcp&id=alexandria&name=Alexandria&description=Query%2C%20read%2C%20and%20ingest%20texts%20from%20152%20public%20digital%20libraries)\n\nA Model Context Protocol (MCP) server for querying, reading, and ingesting texts from 152 public digital libraries. Works with any MCP-compatible client (Claude Desktop, Cursor, VS Code Copilot, etc.).\n\n## Tools\n\n| Tool | Description |\n|---|---|\n| `library_list_sources` | List all 152 sources with descriptions and full-text capabilities\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": {
+              "text": "{\n  \"$schema\": \"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json\",\n  \"_meta\": {\n    \"io.modelcontextprotocol.registry/publisher-provided\": {\n      \"environmentVariablesNote\": \"environmentVariables above is a curated subset: the optional, source-specific keys. The full list of environment variables this server reads (transport, provider, and caching settings included) is documented in .env.example in the repository.\"\n    }\n  },\n  \"name\": \"io.github.The-40-Thieves/alexandria-mcp\",\n  \"title\": \"Alexandria\",\n  \"description\": \"Search, read, and cite across 152 libraries: 11 tools, 3 prompts, and a full-text resource.\",\n  \"repository\": {\n    \"url\": \"https://github.com/The-40-Thieves/alexandria-mcp\",\n    \"source\": \"github\",\n    \"id\": \"1233551033\"\n  },\n  \"version\": \"11.0.0\",\n  \"packages\": [\n    {\n      \"registryType\": \"npm\",\n      \"registryBaseUrl\": \"https://registry.npmjs.org\",\n      \"identifier\": \"@the-40-thieves/alexandria-mcp\",\n      \"version\": \"11.0.0\",\n      \"runtimeHint\": \"npx\",\n      \"transport\": {\n        \"type\": \"stdio\"\n      },\n      \"environmentVariables\": [\n        {\n          \"name\": \"OPENAI_API_KEY\",\n          \"description\": \"OpenAI key for routing (library_ask), synthesis (library_answer, library_research), and embeddings (library_ingest). Search and read tools work without it.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"ALEXANDRIA_BASE_URL\",\n          \"description\": \"OpenAI-compatible gateway base URL shared by every LLM role (router, synth, research, embeddings, rerank). Falls back to https://api.openai.com/v1.\",\n          \"isRequired\": false,\n          \"isSecret\": false,\n          \"format\": \"string\",\n          \"placeholder\": \"https://gateway.example.com/v1\"\n        },\n        {\n          \"name\": \"ALEXANDRIA_API_KEY\",\n          \"description\": \"API key paired with ALEXANDRIA_BASE_URL. Falls back to OPENAI_API_KEY.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"CORE_API_KEY\",\n          \"description\": \"Unlocks the core source (CORE, 57M+ open access papers). Free key from core.ac.uk/services/api.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"COURTLISTENER_API_KEY\",\n          \"description\": \"Unlocks the courtlistener source (US federal and state court opinions). Free key from courtlistener.com.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"GOVINFO_API_KEY\",\n          \"description\": \"Unlocks govinfo (Congressional Record, Federal Register, US Code); also accepted by congress and regulations. Free key from api.data.gov.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"GOOGLE_BOOKS_API_KEY\",\n          \"description\": \"Unlocks the googlebooks source (40M+ books). Free key from the Google Cloud Console (Books API).\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"GITHUB_TOKEN\",\n          \"description\": \"Unlocks githubsearch and githubmcp (GitHub code search); optional for ghsa and openiti. Public-repo read scope is enough.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"NASA_ADS_API_KEY\",\n          \"description\": \"Unlocks the nasaads source (NASA Astrophysics Data System). Free key from ui.adsabs.harvard.edu.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"EUROPEANA_API_KEY\",\n          \"description\": \"Unlocks the europeana source (50M+ European cultural heritage items). Free key from apis.europeana.eu.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        },\n        {\n          \"name\": \"SEMANTIC_SCHOLAR_API_KEY\",\n          \"description\": \"Optional for semanticscholar and library_recommend; raises the rate limit. Free key from semanticscholar.org/product/api.\",\n          \"isRequired\": false,\n          \"isSecret\": true,\n          \"format\": \"string\"\n        }\n      ]\n    }\n  ]\n}\n"
+            },
+            "mcpb": null
+          },
+          {
+            "name": "audio-forge",
+            "description": "Open-Source Hybrid Music Production, AI Track Restoration, Vocal Surgery, Music Theory & REAPER 7.82 Mastering Suite in Rust",
+            "url": "https://github.com/The-40-Thieves/audio-forge",
+            "homepageUrl": null,
+            "stargazerCount": 1,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "Apache-2.0"
+            },
+            "repositoryTopics": {
+              "nodes": []
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "91672f082d9628a8e1f2d30820ea14b7674deaa8",
+                "committedDate": "2026-10-27T09:42:19Z"
+              }
+            },
+            "latestRelease": null,
+            "readme": {
+              "text": "# ForgeAudio (`audio-forge`)\n\n**An audio delivery pipeline that AI agents can drive.** Hand it a track and a target (Spotify, Apple Music, YouTube, broadcast), and it returns a repaired, spec-compliant master plus a measured report that says whether the file is ready to ship and why. On request it also produces separated stems, MIDI and a REAPER session.\n\n[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/The-40-Thieves/audio-forge?utm_source=badge)\n[![CI](https://github.com/The-40-Thieves/audio-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/The-40-Thieves/audio-forge/actions/workflows/ci.yml)\n[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)\n[![Rust](https://img.shields.io/badge/Rust-2024%20Edition-orange.svg)](Cargo.toml)\n[![VST3 / CLAP](https://img.shields.io/badge/Plugins-VST3%20%7C%20CLAP%20%7C%20JSFX-purple.svg)](crates/forge-plug/)\n[![REAPER](https://img.shields.io/badge/REAPER-7.82%2B%20Native%20JSFX%20%26%20RPP-green.svg)](reaper-jsfx/)\n\nThe same Rust DSP engine ships in four forms:\n\n- **`forge-mcp`**, a Model Context Protocol server for agents.\n- **`forge`**, a command-line tool.\n- **`forge-plug`**, ten VST3 and CLAP plugins.\n- **Native REAPER JSFX** effects.\n\n---\n\n## The agent pipeline\n\nAn agent makes one tool call. The pipeline:\n\n1. Audits the input.\n2. Repairs DC offset, clipping and mains hum.\n3. Suppresses harsh spectral resonances (\"AI fizz\").\n4. Ca\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": null,
+            "mcpb": null
+          },
+          {
+            "name": "codecalc",
+            "description": "Universal code & logic calculator for AI models: 51 MCP tools across 31 languages. Rust-sandboxed execution with verdicts, sessions, artifacts, exact arithmetic, and verified translation/optimization. No LLM, no gateway, no telemetry: the caller is the model. Apache-2.0.",
+            "url": "https://github.com/The-40-Thieves/codecalc",
+            "homepageUrl": "https://pypi.org/project/codecalc/",
+            "stargazerCount": 5,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "Apache-2.0"
+            },
+            "repositoryTopics": {
+              "nodes": [
+                {
+                  "topic": {
+                    "name": "ai-agents"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "calculator"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "code-execution"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp-server"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "model-context-protocol"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "python"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "rust"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "sandbox"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "symbolic-math"
+                  }
+                }
+              ]
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "6156f29215f7df316cba70430aec4f104b852837",
+                "committedDate": "2026-10-30T00:49:56Z"
+              }
+            },
+            "latestRelease": {
+              "tagName": "v0.13.0",
+              "name": "v0.13.0",
+              "publishedAt": "2026-09-21T23:44:00Z",
+              "description": "## What's Changed\n* fix(branch_reachability): a literal range() step of 0 is refused, not raised (GH #322, THE-1087) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/330\n* fix(parsing): a deeply nested tree is refused, not a RecursionError (GH #324, THE-1089) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/331\n* fix(server): compact execute_code results keep stderr on a failed run (GH #323, THE-1088) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/333\n* fix(verify_optimization): the headline ratio comes from the sizes the significance test kept (GH #328, THE-1093) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/338\n* fix(benchmark): no confident class from a single doubling ratio; the curve fit is reachable at 3 sizes (GH #327, THE-1092) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/336\n* fix(tracing): an over-cap trace event costs its own detail, not the rest of the trace (GH #321, THE-1086) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/332\n* feat(calculator): percent_change; solve_linear and diff/integrate/series discoverable from the schemas (GH #329, THE-1094) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/337\n* feat(sessions): session_delete_file, the in-band recovery path for the artifact-count cap (GH #325, THE-1090) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/335\n* fix(safe_expr): a product or sum of heavy calls is refused before evaluation, with the ceiling code (GH #326, THE-1091) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/334\n* fix(setup): setup --write no longer dies on a cold grammar cache; config and skill land before the optional prefetch (GH #339, THE-1096) by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/340\n* release: 0.13.0 by @suavecito585 in https://github.com/The-40-Thieves/codecalc/pull/341\n\n\n**Full Changelog**: https://github.com/The-40-Thieves/codecalc/compare/v0.12.0...v0.13.0",
+              "url": "https://github.com/The-40-Thieves/codecalc/releases/tag/v0.13.0",
+              "isPrerelease": false
+            },
+            "readme": {
+              "text": "# codecalc — universal code & logic calculator for AI models\n\n<!-- mcp-name: io.github.The-40-Thieves/codecalc -->\n\n[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/The-40-Thieves/codecalc?utm_source=badge)\n\n**codecalc is an offline, self-hosted MCP server that gives an AI agent a\ncalculator, a code runner, and a logic checker — so it gets a *correct* answer\ninstead of a guessed one.** It runs code in **31 languages**, does exact\nsymbolic math, solves SMT/logic problems, and measures complexity, all exposed\nas **51 MCP tools**.\n\n**Fastest path:** `uvx 'codecalc[full]' setup --write` registers codecalc with your MCP client automatically. New to MCP, or want more detail first? See [QUICKSTART.md](QUICKSTART.md), or the Install section below.\n\nThree things nobody else offers together cleanly:\n\n- **Offline-core** — ships no model, no API key, no gateway, no telemetry.\n  The core opens no sockets; network access is opt-in and only where a\n  specific tool's job needs it (the Piston provider, `install_package`, the\n  runtime-update tools, executed code unless `no_net`, and a one-time\n  in-process grammar download on first `analyze_complexity` — full breakdown\n  in the network-boundary table below).\n- **Safe execution of untrusted code** — an opt-in *strict* isolation\n  boundary (gVisor+Docker on Linux, AppContainer on Windows) layered above\n  the default rlimit sandbox, fail-closed and attested.\n- **Verification tools** — `ver\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": {
+              "text": "{\n  \"$schema\": \"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json\",\n  \"name\": \"io.github.The-40-Thieves/codecalc\",\n  \"title\": \"codecalc\",\n  \"description\": \"Code & logic calculator for AI agents: 31 languages, symbolic math, SMT/logic solving, Big-O.\",\n  \"repository\": { \"url\": \"https://github.com/The-40-Thieves/codecalc\", \"source\": \"github\" },\n  \"version\": \"0.13.0\",\n  \"packages\": [\n    { \"registryType\": \"pypi\", \"registryBaseUrl\": \"https://pypi.org\", \"identifier\": \"codecalc\", \"version\": \"0.13.0\", \"runtimeHint\": \"uvx\", \"transport\": { \"type\": \"stdio\" } }\n  ]\n}\n"
+            },
+            "mcpb": {
+              "text": "{\n  \"manifest_version\": \"0.4\",\n  \"name\": \"codecalc\",\n  \"display_name\": \"codecalc\",\n  \"version\": \"0.13.0\",\n  \"description\": \"Code & logic calculator for AI agents: 31 languages, symbolic math, SMT/logic solving, Big-O.\",\n  \"long_description\": \"First launch needs network access: it resolves and installs `codecalc[full]` (~120 MB, including the symbolic-math and parsing extras) from PyPI into an isolated environment. Offline at that point, it fails with a dependency-resolution error rather than starting in a degraded mode. After that first launch everything is cached locally, and nothing is re-downloaded unless the version changes. Windows on ARM64 is not supported: one of codecalc's own dependencies (cryptography) ships no wheel for that platform.\",\n  \"author\": {\n    \"name\": \"The 40 Thieves\",\n    \"url\": \"https://github.com/The-40-Thieves\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/The-40-Thieves/codecalc\"\n  },\n  \"homepage\": \"https://github.com/The-40-Thieves/codecalc\",\n  \"support\": \"https://github.com/The-40-Thieves/codecalc/issues\",\n  \"license\": \"Apache-2.0\",\n  \"keywords\": [\"mcp\", \"sandbox\", \"executor\", \"code-execution\", \"llm\", \"agent\", \"symbolic-math\"],\n  \"server\": {\n    \"type\": \"uv\",\n    \"entry_point\": \"src/server.py\",\n    \"mcp_config\": {\n      \"command\": \"uv\",\n      \"args\": [\"run\", \"--directory\", \"${__dirname}\", \"src/server.py\"],\n      \"env\": {\n        \"CODECALC_RUNTIME_PATH\": \"${user_config.runtime_path}\"\n      }\n    }\n  },\n  \"compatibility\": {\n    \"platforms\": [\"darwin\", \"linux\", \"win32\"],\n    \"runtimes\": { \"python\": \">=3.11\" }\n  },\n  \"user_config\": {\n    \"runtime_path\": {\n      \"type\": \"string\",\n      \"title\": \"Runtime PATH\",\n      \"description\": \"PATH executed code resolves language runtimes on (CODECALC_RUNTIME_PATH). Claude Desktop launches the server with a stripped environment, so an inherited PATH can miss a toolchain manager's shims (mise, nvm, rustup, ...) entirely and most languages silently become unavailable. Leave blank to fall back to the server's own PATH.\",\n      \"required\": false\n    }\n  }\n}\n"
+            }
+          },
+          {
+            "name": "deepmind-math-ds",
+            "description": "Unified DeepMind Mathematics (AlphaGeometry DD+AR, AlphaProof/Lean 4, FunSearch), Combinatorial & Graph Solvers (OR-Tools, Z3, PySAT, CVXPY, igraph, rustworkx), and TimesFM 2.0 MCP Server.",
+            "url": "https://github.com/The-40-Thieves/deepmind-math-ds",
+            "homepageUrl": null,
+            "stargazerCount": 0,
+            "isArchived": false,
+            "licenseInfo": null,
+            "repositoryTopics": {
+              "nodes": []
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "b06ce27a5e3dc1db4202f6a2b826f0bbb982e7f1",
+                "committedDate": "2026-10-23T01:15:59Z"
+              }
+            },
+            "latestRelease": null,
+            "readme": {
+              "text": "# deepmind-math-ds\n\nUnified **DeepMind Mathematics, Formal Verification, Graph Theory, Neural Algorithmic Reasoning, Combinatorial Optimization, and Data Science** MCP Server built on [FastMCP](https://github.com/jlowin/fastmcp).\n\nNo embedded LLM, no hardcoded keys, no telemetry: **the caller is the model**.\n\n---\n\n## Tools Provided\n\n| Tool | Engine / Backend | Purpose |\n| :--- | :--- | :--- |\n| **`solve_alphageometry_ddar`** | DeepMind [AlphaGeometry](https://github.com/google-deepmind/alphageometry) (`DD+AR`) | Runs Deductive Database + Algebraic Rules (`DD+AR`) symbolic deduction on IMO (`imo_ag_30.txt`), JGEX (`jgex_ag_231.txt`), or custom JGEX geometry clauses, with optional LLM-supplied `auxiliary_constructions` (eliminating the 6.5 GB Meliad checkpoint requirement). |\n| **`verify_lean4`** | [Lean 4](https://lean-lang.org/) (`lean` / `elan`) | Compiles and formally verifies mathematical proofs and tactic scripts (`AlphaProof`-style step-by-step verification), flagging any `sorry` axioms. |\n| **`solve_combinatorics_and_graphs`** | DeepMind `clrs`, `jraph`, `pgmax`, `dm-haiku` + `ortools` (CP-SAT), `z3-solver`, `python-sat`, `cvxpy`, `igraph`, `rustworkx`, `networkx`, `torch_geometric`, `sympy`, `jax` | Executes combinatorial optimization, SAT/SMT, semidefinite programming (Lovász $\\vartheta$), graph isomorphism/invariants, factor graph belief propagation, CLRS algorithmic trajectories, and tabular ML (`polars`, `lightgbm`, `xgboost`, `catboost`) in an isolated subprocess.\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": null,
+            "mcpb": null
+          },
+          {
+            "name": "homebrew-tap",
+            "description": "Homebrew tap for The 40 Thieves tools",
+            "url": "https://github.com/The-40-Thieves/homebrew-tap",
+            "homepageUrl": null,
+            "stargazerCount": 0,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "MIT"
+            },
+            "repositoryTopics": {
+              "nodes": []
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "798a635c39b258f535c480594bfa77253ae75cc9",
+                "committedDate": "2026-10-13T13:46:30Z"
+              }
+            },
+            "latestRelease": null,
+            "readme": {
+              "text": "# homebrew-tap\n\nHomebrew tap for The 40 Thieves tools.\n\n## Install\n\n```\nbrew install the-40-thieves/tap/alexandria-mcp\nbrew install the-40-thieves/tap/obsidian-tc\n```\n\n## Formulae\n\n- `alexandria-mcp`: MCP server for natural-language search, full-text reading,\n  and cited answers across 152 public research libraries (papers, books, law,\n  government records, security advisories, news, and developer docs). Wraps\n  the `@the-40-thieves/alexandria-mcp` npm package. Homepage:\n  https://github.com/The-40-Thieves/alexandria-mcp\n- `obsidian-tc`: model-agnostic, agent-ready MCP server for Obsidian vaults\n  with RBAC, SLSA provenance, and native search. Installs the prebuilt Bun\n  standalone binary published on each GitHub release (macOS arm64/x64, Linux\n  arm64/x64). Homepage: https://github.com/The-40-Thieves/obsidian-tc\n\n## Assets\n\n`assets/alexandria-logo-400.png` is a 400x400 logo used in third-party\ndirectory submissions (for example the Cline MCP Marketplace).\n\n## Status\n\nThis tap has not yet been audited on macOS. Homebrew is not installed on the\nLinux host that authored this formula, so `brew audit --new --formula\nFormula/alexandria-mcp.rb` still needs to run on a Mac before this tap is\nconsidered fully verified. The formula was written against the documented\n`std_npm_args` / `libexec` pattern for npm-based formulae and the tarball\nsha256 was computed directly from the published npm package.\n\n`obsidian-tc.rb` has the same gap — no `brew` on the authoring host, so\n`brew audit`/`\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": null,
+            "mcpb": null
+          },
+          {
+            "name": "obsidian-tc",
+            "description": "Obsidian Turbocharged — governed, agent-ready Obsidian MCP server. Multi-vault native, pluggable embeddings, OAuth-ready HTTP. TypeScript + Rust. AGPL-3.0-only.",
+            "url": "https://github.com/The-40-Thieves/obsidian-tc",
+            "homepageUrl": "https://github.com/The-40-Thieves/obsidian-tc/wiki",
+            "stargazerCount": 13,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "AGPL-3.0"
+            },
+            "repositoryTopics": {
+              "nodes": [
+                {
+                  "topic": {
+                    "name": "ai-agents"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "model-context-protocol"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "obsidian"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "obsidian-md"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "rust"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "typescript"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "knowledge-base"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp-server"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "obsidian-plugin"
+                  }
+                }
+              ]
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "74f0a6df6f9b31ffef6697acbae09f070f1e0d59",
+                "committedDate": "2026-11-01T15:16:33Z"
+              }
+            },
+            "latestRelease": {
+              "tagName": "v1.33.1",
+              "name": "v1.33.1",
+              "publishedAt": "2026-10-13T06:56:21Z",
+              "description": "## What's Changed\n* fix(release): remove the smoked image before pulling the next platform of the same digest by @suavecito585 in https://github.com/The-40-Thieves/obsidian-tc/pull/1251\n* fix(release): attribute fragments and commits to the merge PR, not a trailing issue number by @suavecito585 in https://github.com/The-40-Thieves/obsidian-tc/pull/1250\n* chore(release): v1.33.1 by @suavecito585 in https://github.com/The-40-Thieves/obsidian-tc/pull/1252\n\n\n**Full Changelog**: https://github.com/The-40-Thieves/obsidian-tc/compare/v1.33.0...v1.33.1",
+              "url": "https://github.com/The-40-Thieves/obsidian-tc/releases/tag/v1.33.1",
+              "isPrerelease": false
+            },
+            "readme": {
+              "text": "# obsidian-tc\n\n![obsidian-tc quickstart demo](docs/public/demo/quickstart-storyboard.svg)\n\n> Obsidian Turbocharged — governed, agent-ready vault access over MCP.\n\n[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)\n![Status: Shipped v1.34.0](https://img.shields.io/badge/Status-Shipped_v1.34.0-success)\n[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/The-40-Thieves/obsidian-tc?utm_source=badge)\n\n[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/The-40-Thieves/obsidian-tc)\n\n## What it is\n\nobsidian-tc is a governed, agent-ready [Model Context Protocol](https://modelcontextprotocol.io)\nserver for [Obsidian](https://obsidian.md) vaults, for humans and agents alike. Instead of raw\nfilesystem access to years of notes, every tool call runs through one pipeline — auth, folder\nACLs, a read-only kill switch, HITL confirmation on destructive ops, and an audit log. It also\nadds fused retrieval (full-text, vector, graph) and a memory tier — episodes, decay, forgetting —\nliving *inside* your vault under that same ACL.\n**A full tool surface across every domain** (all visible by default; a smaller set with opt-in\n`profile: \"core\"`), via a 3-tool discovery facade plus the standard `search`/`fetch` pair, listed in the\n[tool catalog](https://github.com/The-40-Thieves/obsidian-tc). Pitch: [do\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": {
+              "text": "{\n  \"$schema\": \"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json\",\n  \"name\": \"io.github.The-40-Thieves/obsidian-tc\",\n  \"title\": \"Obsidian Turbocharged\",\n  \"description\": \"Governed Obsidian vault access: hybrid retrieval, Markdown-native memory, HITL confirmations.\",\n  \"version\": \"1.34.0\",\n  \"websiteUrl\": \"https://github.com/The-40-Thieves/obsidian-tc#readme\",\n  \"repository\": {\n    \"url\": \"https://github.com/The-40-Thieves/obsidian-tc\",\n    \"source\": \"github\"\n  },\n  \"packages\": [\n    {\n      \"registryType\": \"npm\",\n      \"registryBaseUrl\": \"https://registry.npmjs.org\",\n      \"identifier\": \"obsidian-tc\",\n      \"version\": \"1.34.0\",\n      \"transport\": {\n        \"type\": \"stdio\"\n      },\n      \"environmentVariables\": [\n        {\n          \"name\": \"OBSIDIAN_TC_CONFIG\",\n          \"description\": \"Absolute path to the obsidian-tc JSON config (vaults, ACL, transports). May also be passed as the first CLI argument.\",\n          \"isRequired\": true,\n          \"format\": \"filepath\"\n        },\n        {\n          \"name\": \"OBSIDIAN_TC_DEFAULT_VAULT\",\n          \"description\": \"Optional id of the vault to bind tool calls to when a request omits one.\",\n          \"isRequired\": false,\n          \"format\": \"string\"\n        }\n      ]\n    }\n  ]\n}\n"
+            },
+            "mcpb": {
+              "text": "{\n  \"manifest_version\": \"0.3\",\n  \"name\": \"obsidian-tc\",\n  \"display_name\": \"Obsidian Turbocharged\",\n  \"version\": \"1.34.0\",\n  \"description\": \"Governed Obsidian vault access: hybrid retrieval, Markdown-native memory, HITL confirmations.\",\n  \"author\": {\n    \"name\": \"The 40 Thieves\",\n    \"url\": \"https://github.com/The-40-Thieves\"\n  },\n  \"homepage\": \"https://github.com/The-40-Thieves/obsidian-tc#readme\",\n  \"documentation\": \"https://github.com/The-40-Thieves/obsidian-tc#readme\",\n  \"support\": \"https://github.com/The-40-Thieves/obsidian-tc/issues\",\n  \"license\": \"AGPL-3.0-only\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/The-40-Thieves/obsidian-tc\"\n  },\n  \"keywords\": [\n    \"obsidian\",\n    \"obsidian-vault\",\n    \"mcp\",\n    \"model-context-protocol\",\n    \"knowledge-management\",\n    \"semantic-search\",\n    \"retrieval\",\n    \"memory\",\n    \"markdown\",\n    \"agent\",\n    \"rbac\"\n  ],\n  \"server\": {\n    \"type\": \"node\",\n    \"entry_point\": \"packages/server/dist/cli.js\",\n    \"mcp_config\": {\n      \"command\": \"node\",\n      \"args\": [\"${__dirname}/packages/server/dist/cli.js\", \"${user_config.config_path}\"],\n      \"env\": {\n        \"OBSIDIAN_TC_DEFAULT_VAULT\": \"${user_config.default_vault}\"\n      }\n    }\n  },\n  \"tools_generated\": true,\n  \"compatibility\": {\n    \"runtimes\": {\n      \"node\": \">=24.0.0\"\n    }\n  },\n  \"user_config\": {\n    \"config_path\": {\n      \"type\": \"file\",\n      \"title\": \"Config file\",\n      \"description\": \"An obsidian-tc JSON config file, or a vault folder path (zero-config) typed or pasted here; a file picker cannot select a folder.\",\n      \"required\": true\n    },\n    \"default_vault\": {\n      \"type\": \"string\",\n      \"title\": \"Default vault id\",\n      \"description\": \"Vault id to bind tool calls to when a request omits one. Leave blank to use the first configured vault.\",\n      \"required\": false\n    }\n  }\n}\n"
+            }
+          },
+          {
+            "name": "own-the-house",
+            "description": "Stand up your own single-host AI substrate in a weekend. A guided, LLM-runnable runbook: locked edge, model gateway, agent, tools, memory. Companion to the essay 'You Rent the Mind. You Own the House.'",
+            "url": "https://github.com/The-40-Thieves/own-the-house",
+            "homepageUrl": "https://the13thletter.co/suavecito/you-rent-the-mind-you-own-the-house",
+            "stargazerCount": 2,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "Apache-2.0"
+            },
+            "repositoryTopics": {
+              "nodes": [
+                {
+                  "topic": {
+                    "name": "ai-infrastructure"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "claude-code"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "homelab"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "litellm"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "mcp"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "self-hosting"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "single-host"
+                  }
+                },
+                {
+                  "topic": {
+                    "name": "tailscale"
+                  }
+                }
+              ]
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "99939f9cc278455bb0ee19c0fd1f3c6c78084ae4",
+                "committedDate": "2026-07-18T23:42:54Z"
+              }
+            },
+            "latestRelease": null,
+            "readme": {
+              "text": "# own-the-house\n\n**Stand up your own single-host AI substrate in a weekend. One small box. Real tools. No data center.**\n\nYou rent the model. You own the house. This repo is the buildable companion to that idea: a guided runbook that takes you from an empty cloud instance to a locked-down box running a model gateway, a coding agent, a handful of tools, and a memory that compounds — the part of an AI setup that stays yours when the models change.\n\nIt is designed to be **run with an AI agent**. Hand the repo to Claude, ChatGPT, Gemini, Grok, or a local model and have it walk you through, one verified step at a time. Start with **[AGENTS.md](./AGENTS.md)**.\n\n---\n\n## What you end up with\n\nA single Ubuntu 24.04 ARM box on which:\n\n- **Nothing faces the open internet** except one SSH door; everything lives on a private [Tailscale](https://tailscale.com) mesh.\n- **One gateway** ([LiteLLM](https://litellm.ai)) fronts every model provider, so switching models is one line of config.\n- **An agent** ([Claude Code](https://code.claude.com/docs), or your choice) reaches the models through that gateway and calls a small set of tools over [MCP](https://modelcontextprotocol.io).\n- **A memory** — a notes vault the agent reads and writes — that gets smarter every session even though the model has none.\n\nThe box is free (Oracle Always Free ARM) or a few euros a month (Hetzner). The only real recurring cost is your model subscription.\n\n---\n\n## Quickstart\n\nYou don't run these in order by hand — you\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": null,
+            "mcpb": null
+          },
+          {
+            "name": "Suavecitos-Soundboost.AI-Toolkit",
+            "description": "Master, split, tag, and ship your tracks from the terminal, your AI agent, or REAPER. Unofficial CLI + MCP server for SoundBoost.ai, built with their permission.",
+            "url": "https://github.com/The-40-Thieves/Suavecitos-Soundboost.AI-Toolkit",
+            "homepageUrl": null,
+            "stargazerCount": 1,
+            "isArchived": false,
+            "licenseInfo": {
+              "spdxId": "Apache-2.0"
+            },
+            "repositoryTopics": {
+              "nodes": []
+            },
+            "defaultBranchRef": {
+              "name": "main",
+              "target": {
+                "oid": "a9939b0b0cebf23f58a0c6ab43176b4cd5489c25",
+                "committedDate": "2026-10-28T10:18:15Z"
+              }
+            },
+            "latestRelease": null,
+            "readme": {
+              "text": "# Suavecito's SoundBoost.ai Toolkit\n\n[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/The-40-Thieves/Suavecitos-Soundboost.AI-Toolkit?utm_source=badge)\n\n**Master, split, tag, and ship your tracks from the terminal, your AI agent, or straight out of REAPER.**\n\nA CLI, an MCP server, and a REAPER suite for [SoundBoost.ai](https://soundboost.ai), plus a local DSP engine that does the release-prep grunt work offline for free.\n\n> [!IMPORTANT]\n> **This is not the official SoundBoost MCP.** It's an independent, community-built toolkit, made with the SoundBoost team's permission. SoundBoost doesn't maintain or support it, so file bugs and questions [here](https://github.com/The-40-Thieves/Suavecitos-Soundboost.AI-Toolkit/issues), not with them. When SoundBoost ships its official MCP, use that for anything it covers.\n\n---\n\n## Why this exists\n\nFinishing a song is the fun part. Getting it *release-ready* is a checklist: is it too loud for Spotify, is the true peak clipping, are the stems clean, is the ISRC in the file, does the cover art meet spec. Every one of those is a tab, an upload, and a wait.\n\nThis toolkit collapses that checklist into commands. Ask your agent *\"is this mix ready for DistroKid?\"* and it actually measures it. Tell it *\"master it warm, hip-hop preset, -14 LUFS\"* and it does it. Hit a key in REAPER and the stems land on tracks.\n\n**The caller is the model.** No embedded LLM, no telemetry, no hardcoded credential\n[truncated for the fixture]\n"
+            },
+            "hub": null,
+            "server": null,
+            "mcpb": null
+          }
+        ]
+      }
+    }
+  }
+}

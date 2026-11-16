@@ -1,0 +1,22 @@
+{
+  "name": "@the40thieves/rebuild-dispatch",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Worker on hooks.the40thieves.dev: verified GitHub and Sanity webhooks become one repository_dispatch rebuild (P2-09).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "preview": "wrangler dev"
+  },
+  "dependencies": {
+    "@the40thieves/github": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@the40thieves/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

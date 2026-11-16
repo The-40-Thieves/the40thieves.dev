@@ -1,0 +1,29 @@
+{
+  "name": "@the40thieves/mcp",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Worker on the40thieves.dev/mcp: the public read-only MCP server, nine tools rendered from the manifest (P3-S1).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "preview": "wrangler dev"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "catalog:",
+    "@the40thieves/manifest": "workspace:*",
+    "@the40thieves/schemas": "workspace:*",
+    "agents": "catalog:",
+    "minisearch": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@modelcontextprotocol/client": "catalog:",
+    "@modelcontextprotocol/sdk": "catalog:",
+    "@the40thieves/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

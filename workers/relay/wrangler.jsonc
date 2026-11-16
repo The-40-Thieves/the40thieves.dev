@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "relay",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-10-26",
+  // No nodejs_compat: nothing in the relay imports a node: module (and this compatibility date implies it
+  // anyway). global_fetch_strictly_public: fetch() routes as if from the public Internet, so a fetch to a
+  // Cloudflare zone (this Worker's own included) goes through that zone's front door and its security
+  // settings instead of straight to its origin. It is not a private-address filter.
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  // invocation_logs off: the platform log line per request carries the URL and query string, and the relay
+  // never writes a request URL anywhere. The structured log line in src/log.ts is the only record.
+  // traces off, pinned: automatic tracing records each fetch URL and query string, upstream ones included,
+  // and those may carry a visitor's key.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "invocation_logs": false },
+    "traces": { "enabled": false },
+  },
+  "upload_source_maps": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  // Its own hostname, so the browser origin check and the rate limits apply to this Worker alone.
+  "routes": [{ "pattern": "relay.the40thieves.dev", "custom_domain": true }],
+  // Per client IP: 60 fetches a minute and 5 session mints a minute (P4-S2); src/handler.ts mirrors the period
+  // in its Retry-After, and the limiter helpers (clientKey, overLimit) live there too.
+  "ratelimits": [
+    { "name": "RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "SESSION_LIMITER", "namespace_id": "1003", "simple": { "limit": 5, "period": 60 } },
+  ],
+  // The quota relay (P4-S3): one SQLite-backed QuotaCounter per quota-relay source holds the day's
+  // site and visitor counts, so a cap is exact; src/quota-counter.ts. Migrations are append-only.
+  "durable_objects": { "bindings": [{ "name": "QUOTA", "class_name": "QuotaCounter" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["QuotaCounter"] }],
+  // The quota relay's cost dashboard: one data point per /v1/quota request (source, outcome, status).
+  // The dataset is created on the first write. Query it with SQL; see docs/relay-cost-model.md.
+  "analytics_engine_datasets": [{ "binding": "QUOTA_METRICS", "dataset": "relay_quota" }],
+  // Public configuration, not secrets. SITE is the one allowed browser origin; TURNSTILE_HOSTNAMES is the
+  // hostname list a Turnstile token must have been issued for.
+  "vars": {
+    "SITE": "https://the40thieves.dev",
+    "TURNSTILE_HOSTNAMES": "the40thieves.dev",
+  },
+}

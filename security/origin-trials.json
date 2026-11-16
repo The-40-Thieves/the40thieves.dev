@@ -1,0 +1,13 @@
+{
+  "$comment": "Origin Trial tokens for https://the40thieves.dev (O-13, P3-S4). Tokens are public: the layout prints each live one as <meta http-equiv=\"origin-trial\">. One entry per browser trial: { \"browser\": \"chrome\" | \"edge\", \"token\": \"<the token string from the trial page>\" }. apps/hub/src/lib/origin-trials.ts decodes them; a token for another origin fails apps/hub/tests/origin-trials.test.ts and an expired one is dropped at build time. With no entry the WebMCP page tools never load. Only WebMCP tokens belong here: the page gate treats any printed token as the WebMCP switch.",
+  "tokens": [
+    {
+      "browser": "chrome",
+      "token": "At6cFENpIyEW2+Skq48KHW1KeIFACX4l0EwveS9XWs9lWePT2lK/aWMbgOL6Yul09eumviT2JVs8R3p0Ho1e5wcAAABjeyJvcmlnaW4iOiJodHRwczovL3RoZTQwdGhpZXZlcy5kZXY6NDQzIiwiZmVhdHVyZSI6IldlYk1DUCIsImV4cGlyeSI6MTgwNjM2NDgwMCwiaXNTdWJkb21haW4iOnRydWV9"
+    },
+    {
+      "browser": "edge",
+      "token": "A9Sg0sJBFpb3IMJUBmROyxY3C3O60ufKkpvoAdIuchzG5kdwMVdE3qBBYypDLPIDqVSC/B7HaTuBxS2awBLX5+QAAABjeyJvcmlnaW4iOiJodHRwczovL3RoZTQwdGhpZXZlcy5kZXY6NDQzIiwiZmVhdHVyZSI6IldlYk1DUCIsImV4cGlyeSI6MTc5NzY3MDY5NiwiaXNTdWJkb21haW4iOnRydWV9"
+    }
+  ]
+}

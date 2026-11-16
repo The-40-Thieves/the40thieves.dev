@@ -1,0 +1,137 @@
+---
+import Base from '../../layouts/Base.astro';
+import {
+  byCategory,
+  designLibrary,
+  hostOf,
+  USE_NOTES,
+  useSummary,
+} from '../../lib/design-library.ts';
+import { designLibraryLd } from '../../lib/json-ld.ts';
+import { DESIGN_USES } from '@the40thieves/schemas';
+
+const file = designLibrary;
+const jsonLd = designLibraryLd(file, __BUILD_INFO__);
+const groups = byCategory(file);
+const pill: Record<string, string> = {
+  clear: 'bg-emerald-100 text-emerald-900',
+  conditions: 'bg-amber-100 text-amber-900',
+  study: 'bg-slate-200 text-slate-800',
+};
+---
+
+<Base
+  title="Design resource library"
+  description="Design, motion and graphics resources the studio works from, each with whether it can ship in paid work, its licence and the terms page that was read."
+  jsonLd={jsonLd}
+>
+  <h1 class="text-4xl font-semibold tracking-tight">Design resource library</h1>
+  <p class="mt-4 text-lg text-ink/80">
+    The tools, references and research behind the studio's design, motion and video work. Each row
+    says whether it can ship in paid work, under which licence, and which terms page was read. Every
+    link was fetched and every licence read on <time datetime={file.verified}>{file.verified}</time>
+    .
+  </p>
+  <p class="mt-2 text-sm">
+    <a class="underline underline-offset-2" href="/design/library.json">
+      Data (JSON)
+    </a>
+    {' · '}
+    <a class="underline underline-offset-2" href="/schemas/design-library.json">
+      JSON Schema
+    </a>
+    {' · '}
+    <a class="underline underline-offset-2" href="/design/library.md">
+      Markdown
+    </a>
+  </p>
+
+  <p class="mt-8 font-medium">{useSummary(file)}</p>
+  <dl class="mt-4 space-y-2 text-sm text-ink/80">
+    {DESIGN_USES.map((use) => (
+      <div>
+        <dt class={`inline rounded px-1.5 py-0.5 font-medium ${pill[use]}`}>
+          {USE_NOTES[use].label}
+        </dt>
+        <dd class="inline">: {USE_NOTES[use].note}.</dd>
+      </div>
+    ))}
+  </dl>
+
+  <nav class="mt-8 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Categories">
+    {groups.map((group) => (
+      <a class="underline underline-offset-2" href={`#${group.category.id}`}>
+        {group.category.name}
+      </a>
+    ))}
+  </nav>
+
+  {groups.map((group) => (
+    <section class="mt-10">
+      <h2 id={group.category.id} class="text-xl font-semibold">
+        <a class="hover:underline" href={`#${group.category.id}`}>
+          {group.category.name}
+        </a>
+        <span class="ml-2 text-sm font-normal text-ink/60">{group.items.length}</span>
+      </h2>
+      <p class="mt-1 text-sm text-ink/70">{group.category.intro}</p>
+      <ul class="mt-3 divide-y divide-ink/10 border-t border-ink/10">
+        {group.items.map((item) => (
+          <li class="py-3">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <a
+                class="font-medium underline underline-offset-2 [overflow-wrap:anywhere]"
+                href={item.url}
+              >
+                {item.title}
+              </a>
+              <span class={`rounded px-1.5 py-0.5 text-xs font-medium ${pill[item.use]}`}>
+                {USE_NOTES[item.use].label}
+              </span>
+            </div>
+            {item.blurb && <p class="mt-1 text-sm text-ink/70">{item.blurb}</p>}
+            <p class="mt-1 font-mono text-xs text-ink/60">
+              {hostOf(item.url)}
+              {item.licence && <span> · {item.licence}</span>}
+              {item.terms && (
+                <span>
+                  {' · '}
+                  <a class="underline underline-offset-2" href={item.terms}>
+                    terms read
+                  </a>
+                </span>
+              )}
+              {item.check === 'bot-wall' && <span> · confirmed through a browser fetch</span>}
+            </p>
+            {item.note && <p class="mt-1 text-sm">{item.note}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  {file.removed.length > 0 && (
+    <section class="mt-10">
+      <h2 id="removed" class="text-xl font-semibold">
+        Removed in the last pass
+      </h2>
+      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-ink/80">
+        {file.removed.map((entry) => (
+          <li>
+            {entry.title}: {entry.reason}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <p class="mt-10 text-sm text-ink/70">
+    Licence and terms labels record what was read for the studio's own use. They are not legal
+    advice; read the current licence before shipping client work.
+  </p>
+  <p class="mt-4 text-sm">
+    <a class="underline underline-offset-2" href="/">
+      Home
+    </a>
+  </p>
+</Base>

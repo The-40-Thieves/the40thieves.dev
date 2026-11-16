@@ -1,0 +1,103 @@
+{
+  "spotlight": [
+    {
+      "id": "7f3c1a0e-spotlight-codecalc",
+      "title": "codecalc 0.13: one calculator for 31 languages",
+      "slug": "codecalc-0-13",
+      "summary": "The release that made the measured claim on the product page true.",
+      "body": [
+        {
+          "_type": "block",
+          "_key": "a1",
+          "style": "normal",
+          "markDefs": [
+            { "_type": "link", "_key": "l1", "href": "https://github.com/The-40-Thieves/codecalc" }
+          ],
+          "children": [
+            { "_type": "span", "_key": "s1", "text": "Fifty-one tools, ", "marks": [] },
+            { "_type": "span", "_key": "s2", "text": "measured", "marks": ["strong"] },
+            { "_type": "span", "_key": "s3", "text": " on the ", "marks": [] },
+            { "_type": "span", "_key": "s4", "text": "repository", "marks": ["l1"] },
+            { "_type": "span", "_key": "s5", "text": ".", "marks": [] }
+          ]
+        }
+      ],
+      "project": "codecalc",
+      "link": null,
+      "image": {
+        "public_id": "the40thieves/codecalc-0-13",
+        "format": "png",
+        "width": 1600,
+        "height": 900,
+        "alt": "codecalc converting a hex literal in the terminal"
+      },
+      "published_at": "2026-11-03T09:00:00.000Z",
+      "updated_at": "2026-11-03T09:05:00.000Z"
+    },
+    {
+      "id": "7f3c1a0e-spotlight-older",
+      "title": "The hub is live",
+      "slug": "hub-live",
+      "summary": "the40thieves.dev answers with a manifest, a feed and three product pages.",
+      "body": null,
+      "project": null,
+      "link": "https://the40thieves.dev/manifest.json",
+      "image": null,
+      "published_at": "2026-11-02T20:00:00.000Z",
+      "updated_at": "2026-11-02T20:00:00.000Z"
+    }
+  ],
+  "changelogPost": [
+    {
+      "id": "9b2d4c11-changelog-org-readme",
+      "title": "Org README rendered from the manifest",
+      "slug": "org-readme-from-manifest",
+      "summary": "The GitHub org page now shows the banner, one card per project and the install table.",
+      "body": [
+        {
+          "_type": "block",
+          "_key": "b1",
+          "style": "h2",
+          "markDefs": [],
+          "children": [{ "_type": "span", "_key": "t1", "text": "What changed", "marks": [] }]
+        },
+        {
+          "_type": "block",
+          "_key": "b2",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            { "_type": "span", "_key": "t2", "text": "The deploy commits ", "marks": [] },
+            { "_type": "span", "_key": "t3", "text": "profile/README.md", "marks": ["code"] },
+            { "_type": "span", "_key": "t4", "text": " only when it changed.", "marks": [] }
+          ]
+        },
+        {
+          "_type": "figure",
+          "_key": "b3",
+          "asset": {
+            "public_id": "the40thieves/org-readme",
+            "format": "png",
+            "width": 1600,
+            "height": 900
+          },
+          "alt": "The org README with the banner and three cards",
+          "caption": "Rendered by the deploy."
+        }
+      ],
+      "project": null,
+      "published_at": "2026-11-04T12:00:00.000Z",
+      "updated_at": "2026-11-04T12:00:00.000Z"
+    },
+    {
+      "id": "9b2d4c11-changelog-cards",
+      "title": "SVG cards for every listed project",
+      "slug": "svg-cards",
+      "summary": "Self-contained SVG cards at /og/card/<slug>.svg.",
+      "body": null,
+      "project": "codecalc",
+      "published_at": "2026-11-04T08:00:00.000Z",
+      "updated_at": "2026-11-04T08:30:00.000Z"
+    }
+  ]
+}

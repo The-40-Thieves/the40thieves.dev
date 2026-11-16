@@ -1,0 +1,10 @@
+{
+  "specVersion": "1.0",
+  "entries": [
+    {
+      "identifier": "urn:air:the40thieves.dev:mcp:the40thieves-dev",
+      "type": "application/mcp-server-card+json",
+      "url": "https://the40thieves.dev/mcp/server-card"
+    }
+  ]
+}

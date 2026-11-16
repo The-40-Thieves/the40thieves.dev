@@ -1,0 +1,36 @@
+rules:
+  - id: postmessage-handler-without-origin-check
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      A "message" event handler must check event.origin before it trusts the data
+     . Compare against an allowlist, then read event.data.
+    metadata:
+      category: security
+      cwe: 'CWE-346: Origin Validation Error'
+    patterns:
+      - pattern-either:
+          - pattern: $T.addEventListener("message", ($E) => { ... })
+          - pattern: $T.addEventListener("message", function ($E) { ... })
+          - pattern: $T.onmessage = ($E) => { ... }
+          - pattern: $T.onmessage = function ($E) { ... }
+      # The matched handler must mention the event's origin somewhere in its body.
+      - pattern-not-regex: '\borigin\b'
+
+  - id: fetch-to-non-allowlisted-host
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >-
+      fetch() with a literal URL may only reach an allowlisted host (api.github.com, and
+      us.i.posthog.com for the anonymous page view, P2-12).
+      Add the host to this rule's regex with a reason before calling it.
+    metadata:
+      category: security
+      cwe: 'CWE-918: Server-Side Request Forgery (SSRF)'
+    patterns:
+      - pattern-either:
+          - pattern: fetch("$URL", ...)
+          - pattern: fetch(new URL("$URL", ...), ...)
+      - metavariable-regex:
+          metavariable: $URL
+          regex: '^https?://(?!(api\.github\.com|us\.i\.posthog\.com)/)'

@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The relay's local stack (P4-S2), run only by `pnpm relay-stack` under `wrangler dev --local` for the
+  // relay-zap scan. Never deployed: no route, no custom domain, no workers.dev or preview URL, no binding.
+  // tests/stack-entry.ts runs the production handler with an allowlist of upstream.test alone, served by a
+  // mock on loopback, so nothing the scanner sends can reach a real host.
+  "name": "relay-stack",
+  "main": "./tests/stack-entry.ts",
+  "compatibility_date": "2026-10-26",
+  // No nodejs_compat, as in production: nothing the stack entry runs imports a node: module. Not
+  // global_fetch_strictly_public: the mock upstream is on loopback and the stack's fetch rewrites only
+  // https://upstream.test onto it, refusing every other URL; that rewrite is the wall here.
+  "compatibility_flags": [],
+  "workers_dev": false,
+  "preview_urls": false,
+  // Defaults for the default port; scripts/relay-stack.ts passes both with --var for the port it was given.
+  "vars": {
+    "SITE": "http://127.0.0.1:8795",
+    "UPSTREAM": "http://127.0.0.1:8796",
+  },
+}

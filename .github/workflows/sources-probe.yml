@@ -1,0 +1,154 @@
+# Weekly alexandria source probe (P4-S1). Re-runs scripts/probe-sources.ts against upstream
+# main and, when data/sources.json comes out different, commits the new file to bot/sources-probe
+# as the App and opens a pull request against main, so a source that opened or closed CORS, or a
+# key or cap that upstream added, reaches the routing matrix within a week. Nothing merges by
+# itself: the pull request goes through the same checks and review as any other.
+#
+# Signed commit. The ruleset on main requires signed commits, and a commit made on the runner and
+# sent with git push carries no signature, so the job never runs git commit or git push. It builds
+# the commit through GitHub's git data API with the App's token and no author or committer of its
+# own, which is the case where GitHub signs the commit itself, and it moves the branch only after
+# the API reports that commit as verified.
+#
+# Permissions. The App the40thieves-bot holds Metadata read, Contents write and Pull requests read
+# and write on this repository. The repository setting "Allow GitHub Actions to create and approve
+# pull requests" stays off: the App token, not GITHUB_TOKEN, opens the pull request.
+name: sources-probe
+
+on:
+  schedule:
+    - cron: '30 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One run at a time: two runs would race on bot/sources-probe.
+concurrency:
+  group: sources-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: sources-probe (weekly)
+    # GitHub's runner on purpose, unlike every other job. The probe's result depends on the
+    # address it runs from: on 2026-11-10 a run from an instabox runner got HTTP 403 from
+    # api.lib.harvard.edu, which answers 200 with open CORS elsewhere, and recorded the source
+    # as closed. Keep the probe where its results on main were measured.
+    runs-on: ubuntu-latest
+    env:
+      REPO_URL: https://github.com/The-40-Thieves/the40thieves.dev.git
+      BRANCH: bot/sources-probe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      # Clones upstream at main into a temp dir, installs it, probes every source once and rewrites
+      # data/sources.json, logging what changed per source. Exit 125 (clone, install or load
+      # failed) and exit 2 (more than --max-failed sources failed: a degraded network, which must
+      # not be proposed as a routing change) both fail the job here, before any token exists.
+      - name: Probe the sources
+        shell: bash
+        run: node scripts/probe-sources.ts 2>&1 | tee "$RUNNER_TEMP/probe.log"
+      - name: Did data/sources.json change?
+        id: diff
+        run: |
+          if [ -n "$(git status --porcelain data/sources.json)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git --no-pager diff --stat data/sources.json
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "data/sources.json is current; nothing to propose."
+          fi
+      # Contents write, scoped to this repository, only for the commit and the branch.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        if: steps.diff.outputs.changed == 'true'
+        id: push-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: the40thieves.dev
+          permission-contents: write
+          permission-metadata: read
+      - name: Commit to bot/sources-probe through the API
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.push-token.outputs.token }}
+          GH_REPO: The-40-Thieves/the40thieves.dev
+        run: |
+          set -euo pipefail
+          parent="$(git rev-parse HEAD)"
+          base_tree="$(git rev-parse 'HEAD^{tree}')"
+          # The file goes up base64 so the blob is byte for byte the file on disk; the blob id
+          # GitHub answers with must be the one git computes here.
+          base64 -w0 data/sources.json > "$RUNNER_TEMP/sources.b64"
+          blob="$(gh api -X POST "repos/${GH_REPO}/git/blobs" -f encoding=base64 \
+            -F "content=@${RUNNER_TEMP}/sources.b64" --jq .sha)"
+          if [ "$blob" != "$(git hash-object data/sources.json)" ]; then
+            echo "::error::The uploaded blob ${blob} is not data/sources.json as probed."
+            exit 1
+          fi
+          tree="$(printf '{"base_tree":"%s","tree":[{"path":"data/sources.json","mode":"100644","type":"blob","sha":"%s"}]}' \
+            "$base_tree" "$blob" | gh api -X POST "repos/${GH_REPO}/git/trees" --input - --jq .sha)"
+          # No author and no committer in the request: that is what makes GitHub sign the commit.
+          created="$(printf '{"message":"chore(sources): weekly alexandria source probe","tree":"%s","parents":["%s"]}' \
+            "$tree" "$parent" | gh api -X POST "repos/${GH_REPO}/git/commits" --input - \
+            --jq '"\(.sha) \(.verification.verified)"')"
+          read -r commit verified <<<"$created"
+          if [ "$verified" != "true" ]; then
+            echo "::error::Commit ${commit} came back unsigned; ${BRANCH} was left as it was."
+            exit 1
+          fi
+          # One commit on top of the checked-out revision, replacing whatever the branch held. The
+          # job is the branch's only writer and the concurrency group keeps runs apart.
+          if gh api "repos/${GH_REPO}/git/ref/heads/${BRANCH}" --silent 2>/dev/null; then
+            gh api -X PATCH "repos/${GH_REPO}/git/refs/heads/${BRANCH}" -f "sha=${commit}" -F force=true --silent
+          else
+            gh api -X POST "repos/${GH_REPO}/git/refs" -f "ref=refs/heads/${BRANCH}" -f "sha=${commit}" --silent
+          fi
+          echo "${BRANCH} is at signed commit ${commit}. Compare: ${REPO_URL%.git}/compare/main...${BRANCH}"
+      # Pull requests write, contents read, only to open the pull request.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        if: steps.diff.outputs.changed == 'true'
+        id: pr-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: The-40-Thieves
+          repositories: the40thieves.dev
+          permission-pull-requests: write
+          permission-contents: read
+          permission-metadata: read
+      - name: Open the pull request
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.pr-token.outputs.token }}
+          GH_REPO: The-40-Thieves/the40thieves.dev
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          existing="$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            echo "Pull request #${existing} already tracks ${BRANCH}; its branch was updated above."
+            exit 0
+          fi
+          {
+            echo 'The weekly probe (`.github/workflows/sources-probe.yml`) re-ran `scripts/probe-sources.ts` against upstream `main` and `data/sources.json` came out different.'
+            echo
+            echo 'The lines below are the review: a `cors` or `route` change means a host opened or closed CORS for the hub origin, a `key` change means upstream added or removed a key, a `probe.detail` change alone is usually a timeout or a 429 that will settle next week. A runner sees some hosts differently from a development machine (rate limits and blocks by IP), so the first runs may carry a batch of such lines. `/alexandria/sources/` renders whatever merges.'
+            echo
+            echo '```'
+            grep -E '^[~+-] ' "$RUNNER_TEMP/probe.log" || echo '(no per-source lines logged)'
+            echo '```'
+            echo
+            echo '```'
+            git --no-pager diff --stat -- data/sources.json
+            echo '```'
+            echo
+            echo "Run: ${RUN_URL}"
+          } > "$RUNNER_TEMP/pr-body.md"
+          gh pr create --base main --head "$BRANCH" \
+            --title 'chore(sources): weekly alexandria source probe' \
+            --body-file "$RUNNER_TEMP/pr-body.md"

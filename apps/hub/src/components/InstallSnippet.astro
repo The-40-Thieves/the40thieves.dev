@@ -1,0 +1,63 @@
+---
+import type { InstallClient } from '@the40thieves/schemas';
+
+interface Props {
+  client: InstallClient;
+  snippet: string;
+}
+
+const LABELS: Record<InstallClient, string> = {
+  shell: 'Shell',
+  'claude-code': 'Claude Code',
+  cursor: 'Cursor',
+  vscode: 'VS Code',
+};
+
+const { client, snippet } = Astro.props;
+const id = `install-${client}`;
+---
+
+<div class="mt-4" data-snippet={client}>
+  <div class="flex items-baseline justify-between gap-4">
+    <h3 class="text-sm font-semibold uppercase tracking-wide" id={`${id}-label`}>
+      {LABELS[client]}
+    </h3>
+    <button
+      class="rounded border border-ink/30 px-2 py-0.5 text-sm hover:bg-ink hover:text-paper"
+      type="button"
+      data-copy={id}
+      aria-describedby={`${id}-label`}
+    >
+      Copy
+    </button>
+  </div>
+  <pre
+    class="mt-2 overflow-x-auto rounded bg-ink p-4 text-sm text-paper"
+    tabindex="0"
+  ><code id={id}>{snippet}</code></pre>
+</div>
+
+<script>
+  // Bundled by Astro, so it is hashed into the CSP; no inline handlers.
+  function flash(button: HTMLButtonElement, text: string) {
+    button.textContent = text;
+    setTimeout(() => {
+      button.textContent = 'Copy';
+    }, 1500);
+  }
+  for (const button of document.querySelectorAll<HTMLButtonElement>('button[data-copy]')) {
+    button.addEventListener('click', () => {
+      const code = document.getElementById(button.dataset.copy ?? '');
+      const text = code?.textContent ?? '';
+      navigator.clipboard.writeText(text).then(
+        () => {
+          flash(button, 'Copied');
+        },
+        (error: unknown) => {
+          console.error('copy failed', error);
+          flash(button, 'Copy failed');
+        },
+      );
+    });
+  }
+</script>

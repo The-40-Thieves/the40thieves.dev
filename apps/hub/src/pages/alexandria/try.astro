@@ -1,0 +1,55 @@
+---
+import TryApp from '../../components/TryApp.tsx';
+import Base from '../../layouts/Base.astro';
+import { tryLd } from '../../lib/json-ld.ts';
+import { CONNECT_ORIGINS } from '../../lib/try/relay.ts';
+
+// The page's own CSP additions (P4-S4), merged into the hashed <meta> Astro writes. The
+// `_headers` rule for this path (security/headers.policy.json) adds a second, enforcing policy
+// that narrows connect-src to the same list without PostHog, and reports to /csp-report.
+Astro.csp?.insertDirective(`connect-src ${CONNECT_ORIGINS.join(' ')}`);
+Astro.csp?.insertDirective('frame-src https://challenges.cloudflare.com');
+Astro.csp?.insertScriptResource("'self'");
+Astro.csp?.insertScriptResource('https://challenges.cloudflare.com');
+
+const jsonLd = tryLd(__BUILD_INFO__);
+---
+
+<Base
+  title="Try alexandria"
+  description="Search eight of alexandria's sources from your browser with your own keys, read the abstracts, and get an answer from your own model that cites them."
+  jsonLd={jsonLd}
+  analytics={false}
+>
+  <link slot="head" rel="manifest" href="/alexandria/try/manifest.webmanifest" />
+  <link slot="head" rel="icon" href="/alexandria/try/icon.svg" type="image/svg+xml" />
+  <meta slot="head" name="theme-color" content="#111111" />
+  <h1 class="text-4xl font-semibold tracking-tight">Try alexandria</h1>
+  <p class="mt-4 text-lg text-ink/80">
+    Search eight of alexandria-mcp's sources from your browser, read what they return, and ask your
+    own model for an answer that cites them. Three sources answer your browser directly, three go
+    through the relay, and two use the site's small daily allowance; the
+    <a class="underline underline-offset-2" href="/alexandria/sources/">
+      routing matrix
+    </a>{' '}
+    says why.
+  </p>
+  <p class="mt-2 text-sm text-ink/80">
+    Your keys stay in this page's memory unless you choose to keep them for the tab. This page sends
+    no analytics, and its content policy allows only the hosts listed in its
+    <a class="underline underline-offset-2" href="/alexandria/try.md">
+      Markdown twin
+    </a>
+    .
+  </p>
+  <TryApp client:load />
+  <noscript>
+    <p class="mt-8">
+      The search runs in your browser and needs JavaScript. The
+      <a class="underline underline-offset-2" href="/alexandria/sources/">
+        routing matrix
+      </a>{' '}
+      works without it.
+    </p>
+  </noscript>
+</Base>

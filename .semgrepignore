@@ -1,0 +1,7 @@
+# Semgrep skips these on top of its defaults (node_modules, .git, build output).
+dist/
+.astro/
+.wrangler/
+pnpm-lock.yaml
+tests/fixtures/
+apps/hub/tests/fixtures/

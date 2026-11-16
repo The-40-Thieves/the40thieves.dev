@@ -1,0 +1,59 @@
+---
+import { twinPath, WEBMCP_TOOLS_META, webmcpToolsFor } from '@the40thieves/manifest';
+
+import { activeTrialTokens, TRIAL_ENTRIES } from '../lib/origin-trials.ts';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** schema.org JSON-LD for the page (P3-S2); the contract test keeps it inside the manifest. */
+  jsonLd: Record<string, unknown>;
+  /**
+   * Send the anonymous page view (default). The try app (P4-S4) turns it off: its page
+   * policy allows no third-party origin the visitor's own search does not need.
+   */
+  analytics?: boolean;
+}
+
+const { title, description, jsonLd, analytics = true } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// The page's Markdown twin (P3-S2); the `_headers` Link rule says the same thing.
+const pathname = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const twin = twinPath(pathname);
+// WebMCP page tools (P3-S4): the live Origin Trial tokens and the tools this route offers.
+// `scripts/webmcp.ts` registers them only when both metas and the browser API are there.
+// The clock is the build's own (resolved in Node): prerendering runs inside workerd.
+const trialTokens = activeTrialTokens(
+  TRIAL_ENTRIES.map((entry) => entry.token),
+  Date.parse(__BUILD_INFO__.generatedAt),
+);
+const pageTools = webmcpToolsFor(pathname);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href={twin} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Releases" href="/releases.xml" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    {trialTokens.map((token) => (
+      <meta http-equiv="origin-trial" content={token} />
+    ))}
+    {pageTools.length > 0 && <meta name={WEBMCP_TOOLS_META} content={pageTools.join(' ')} />}
+    {analytics && <script src="../scripts/pageview.ts"></script>}
+    <script src="../scripts/webmcp.ts"></script>
+    <slot name="head" />
+  </head>
+  <body class="min-h-dvh bg-paper font-sans text-ink antialiased">
+    <main class="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center px-6 py-16">
+      <slot />
+    </main>
+  </body>
+</html>

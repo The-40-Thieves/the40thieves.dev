@@ -1,0 +1,25 @@
+# Scheduled edge-config drift check (P2-13). The same script runs as the `edge-config` job
+# in ci.yml on every pull request and push; this workflow catches a dashboard change made while
+# nothing is being merged, within a day.
+name: edge-config
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: edge-config (scheduled)
+    runs-on: instabox-medium
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: node scripts/edge-config.ts --check
+        env:
+          CLOUDFLARE_DRIFT_TOKEN: ${{ secrets.CLOUDFLARE_DRIFT_TOKEN }}

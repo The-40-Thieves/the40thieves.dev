@@ -1,0 +1,10 @@
+# lychee link checker configuration (used by the CI audit job in --offline mode).
+no_progress = true
+accept = [200, 429]
+max_retries = 2
+timeout = 20
+# The live site does not exist until the bootstrap deploy; GitHub rate-limits anonymous checks.
+# /<project>/docs/ is served by that project's `<project>-docs` Worker (P2-07), not from this
+# dist; its own docs-deploy run verifies the live page.
+exclude = ['^https://the40thieves\.dev', '^https://github\.com/The-40-Thieves/', '/[a-z0-9-]+/docs/?$']
+exclude_path = ['node_modules']

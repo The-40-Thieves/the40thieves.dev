@@ -1,0 +1,28 @@
+---
+import type { Provenance } from '@the40thieves/schemas';
+
+interface Props {
+  /** Where the page copy came from. */
+  source: Provenance;
+  /** The project's head commit the data was read at. */
+  head: { sha: string; committed_at: string };
+}
+
+const { source, head } = Astro.props;
+const build = __BUILD_INFO__;
+const short = (sha: string) => sha.slice(0, 7);
+const day = (iso: string) => iso.slice(0, 10);
+const sourceUrl = `https://github.com/${source.repo}/blob/${source.sha}/${source.path}`;
+---
+
+<footer class="mt-16 border-t border-ink/20 pt-4 text-sm text-ink/70">
+  <p>
+    Copy from{' '}
+    <a class="underline underline-offset-2" href={sourceUrl} rel="noopener">
+      {source.repo}:{source.path}
+    </a>{' '}
+    at <code>{short(source.sha)}</code>. Repository read at <code>{short(head.sha)}</code> (
+    {day(head.committed_at)}). Site built from <code>{short(build.commit)}</code> on{' '}
+    {day(build.generatedAt)}.
+  </p>
+</footer>

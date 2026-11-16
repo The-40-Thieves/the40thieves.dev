@@ -1,0 +1,19 @@
+{
+  "name": "@the40thieves/preview-gateway",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Worker on pr-<n>-preview.the40thieves.dev: serves the hub's pull request preview aliases from the .dev zone.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@the40thieves/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

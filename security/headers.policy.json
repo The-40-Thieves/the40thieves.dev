@@ -1,0 +1,179 @@
+{
+  "$comment": "Single source of truth for response headers on the40thieves.dev. Edit here; scripts/gen-headers.ts writes apps/hub/public/_headers and scripts/audit-headers.ts verifies dist and live responses. The mcp class is the /mcp Worker (P3-S1) and the relay class the relay.the40thieves.dev Worker (P4-S2); both bundle their rules from this file.",
+  "version": 1,
+  "headers": [
+    {
+      "name": "Strict-Transport-Security",
+      "value": "max-age=63072000; includeSubDomains; preload",
+      "classes": ["static", "ssr", "mcp", "relay"]
+    },
+    {
+      "name": "X-Content-Type-Options",
+      "value": "nosniff",
+      "classes": ["static", "ssr", "mcp", "relay"]
+    },
+    {
+      "name": "Referrer-Policy",
+      "value": "strict-origin-when-cross-origin",
+      "classes": ["static", "ssr", "mcp"]
+    },
+    {
+      "name": "X-Frame-Options",
+      "value": "DENY",
+      "classes": ["static", "ssr", "mcp", "relay"]
+    },
+    {
+      "name": "Content-Security-Policy",
+      "value": "frame-ancestors 'none'",
+      "classes": ["static", "ssr", "mcp"]
+    },
+    {
+      "name": "Permissions-Policy",
+      "value": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
+      "classes": ["static", "ssr", "mcp"]
+    },
+    {
+      "$comment": "On-demand responses only (P2-02). Derived from security/csp.directives.json by scripts/lib/csp.ts; tests/csp-report-only.test.ts fails when the two drift. Prerendered pages carry their hashed CSP in a <meta> instead, which cannot report.",
+      "name": "Content-Security-Policy-Report-Only",
+      "value": "default-src 'self'; img-src 'self' data: https://res.cloudinary.com/dlju18kt4/; font-src 'self'; connect-src 'self' https://us.i.posthog.com; object-src 'none'; base-uri 'self'; form-action 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; report-uri /csp-report; report-to csp-endpoint",
+      "classes": ["ssr"]
+    },
+    {
+      "name": "Reporting-Endpoints",
+      "value": "csp-endpoint=\"/csp-report\"",
+      "classes": ["ssr"]
+    },
+    {
+      "$comment": "The org README embeds /og/*.svg through GitHub Camo (P2-10); revalidate every time so a rebuilt card shows within one fetch.",
+      "name": "Cache-Control",
+      "value": "no-cache",
+      "classes": ["static"],
+      "path": "/og/*"
+    },
+    {
+      "$comment": "Markdown twins (P3-S2): every HTML page has one at its own path with .md in place of the trailing slash. Cloudflare substitutes :page into the Link value; apps/hub/tests/contract.test.ts checks the mapping against the build and the deploy audit checks it live.",
+      "name": "Content-Type",
+      "value": "text/markdown; charset=utf-8",
+      "classes": ["static"],
+      "path": "/*.md"
+    },
+    {
+      "name": "Link",
+      "value": "</index.md>; rel=\"alternate\"; type=\"text/markdown\"",
+      "classes": ["static"],
+      "path": "/"
+    },
+    {
+      "name": "Link",
+      "value": "</:page.md>; rel=\"alternate\"; type=\"text/markdown\"",
+      "classes": ["static"],
+      "path": "/:page/"
+    },
+    {
+      "$comment": "The nested alexandria pages (P4-S1): Cloudflare's :page placeholder spans one path segment, so /alexandria/sources/ needs its own Link rule to reach /alexandria/sources.md.",
+      "name": "Link",
+      "value": "</alexandria/:page.md>; rel=\"alternate\"; type=\"text/markdown\"",
+      "classes": ["static"],
+      "path": "/alexandria/:page/"
+    },
+    {
+      "$comment": "The try app (P4-S4): a second, enforcing policy on top of the page's hashed <meta>. It names no script or style source, so the meta's hashes still decide those; it narrows connect-src to the hosts the visitor's own search calls (no PostHog), allows Turnstile's frame, and reports to /csp-report. Cloudflare joins it to the site-wide frame-ancestors value with a comma, which browsers read as two policies, both enforced. apps/hub/tests/try-page.test.ts holds connect-src to CONNECT_ORIGINS.",
+      "name": "Content-Security-Policy",
+      "value": "connect-src 'self' https://relay.the40thieves.dev https://api.openalex.org https://api.crossref.org https://www.ebi.ac.uk https://api.anthropic.com https://api.openai.com; frame-src https://challenges.cloudflare.com; img-src 'self' data:; manifest-src 'self'; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; report-uri /csp-report; report-to csp-endpoint",
+      "classes": ["static"],
+      "path": "/alexandria/try/"
+    },
+    {
+      "name": "Reporting-Endpoints",
+      "value": "csp-endpoint=\"/csp-report\"",
+      "classes": ["static"],
+      "path": "/alexandria/try/"
+    },
+    {
+      "$comment": "The nested design pages: like /alexandria/:page/, /design/library/ needs its own Link rule to reach /design/library.md.",
+      "name": "Link",
+      "value": "</design/:page.md>; rel=\"alternate\"; type=\"text/markdown\"",
+      "classes": ["static"],
+      "path": "/design/:page/"
+    },
+    {
+      "$comment": "The AI Catalog (P3-S3): a static file whose one entry points at the MCP Server Card. The AI Catalog serving guide asks for this media type; like the card it is public discovery metadata, so any origin may read it and an hour of caching is safe. apps/hub/tests/well-known.test.ts checks the built block and the deploy audit checks it live.",
+      "name": "Content-Type",
+      "value": "application/ai-catalog+json",
+      "classes": ["static"],
+      "path": "/.well-known/ai-catalog.json"
+    },
+    {
+      "name": "Access-Control-Allow-Origin",
+      "value": "*",
+      "classes": ["static"],
+      "path": "/.well-known/ai-catalog.json"
+    },
+    {
+      "name": "Cache-Control",
+      "value": "public, max-age=3600",
+      "classes": ["static"],
+      "path": "/.well-known/ai-catalog.json"
+    },
+    {
+      "$comment": "The MCP Server Card (P3-S3, SEP-2127). The values are the ones upstream's discovery document asks card hosts to send: public metadata, readable from any origin, cached for an hour and revalidated by ETag. The Worker bundles these (workers/mcp/src/card.ts); the CORS rules go on every response from the path, Cache-Control only on a 200 or 304.",
+      "name": "Access-Control-Allow-Origin",
+      "value": "*",
+      "classes": ["mcp"],
+      "path": "/mcp/server-card"
+    },
+    {
+      "name": "Access-Control-Allow-Methods",
+      "value": "GET",
+      "classes": ["mcp"],
+      "path": "/mcp/server-card"
+    },
+    {
+      "name": "Access-Control-Allow-Headers",
+      "value": "Content-Type, If-None-Match",
+      "classes": ["mcp"],
+      "path": "/mcp/server-card"
+    },
+    {
+      "name": "Access-Control-Expose-Headers",
+      "value": "ETag",
+      "classes": ["mcp"],
+      "path": "/mcp/server-card"
+    },
+    {
+      "name": "Cache-Control",
+      "value": "public, max-age=3600",
+      "classes": ["mcp"],
+      "path": "/mcp/server-card"
+    },
+    {
+      "$comment": "WebMCP page tools (P3-S4): what a hub page reads before it registers tools with the browser, and where the KV kill switch shows. One minute, so switching the page tools off reaches every visitor within KV propagation plus this. Same-origin only, so no CORS. The Worker sends it on a 200 only (workers/mcp/src/webmcp.ts).",
+      "name": "Cache-Control",
+      "value": "public, max-age=60",
+      "classes": ["mcp"],
+      "path": "/mcp/webmcp"
+    },
+    {
+      "$comment": "The visitor-key relay (P4-S2): every response carries upstream bytes that are never a page, so nothing may render, frame or script them, and no Referer leaves. The page at the40thieves.dev reads them cross-origin, hence CORP cross-origin. The Worker bundles these (workers/relay/src/headers.ts) beside the shared HSTS, nosniff and X-Frame-Options rules; the deploy audits them live with audit:headers --class relay.",
+      "name": "Content-Security-Policy",
+      "value": "default-src 'none'; sandbox",
+      "classes": ["relay"]
+    },
+    {
+      "name": "Referrer-Policy",
+      "value": "no-referrer",
+      "classes": ["relay"]
+    },
+    {
+      "name": "Cross-Origin-Resource-Policy",
+      "value": "cross-origin",
+      "classes": ["relay"]
+    }
+  ],
+  "cspMeta": {
+    "requiredDirectives": ["default-src", "script-src", "style-src", "object-src", "base-uri"],
+    "forbidden": {
+      "script-src": ["'unsafe-inline'", "'unsafe-eval'"]
+    }
+  }
+}

@@ -1,0 +1,132 @@
+---
+import { hubProvenance } from '@the40thieves/manifest';
+import { INSTALL_CLIENTS, type ProjectEntry } from '@the40thieves/schemas';
+import { getCollection } from 'astro:content';
+
+import InstallSnippet from '../components/InstallSnippet.astro';
+import Provenance from '../components/Provenance.astro';
+import Base from '../layouts/Base.astro';
+import { projectLd } from '../lib/json-ld.ts';
+import { renderReleaseNotes } from '../lib/markdown.ts';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('projects');
+  return entries
+    .filter((entry) => entry.data.listed && entry.data.hub)
+    .map((entry) => ({ params: { slug: entry.data.slug }, props: { project: entry.data } }));
+}
+
+interface Props {
+  project: ProjectEntry;
+}
+
+const { project } = Astro.props;
+const hub = project.hub;
+if (!hub) throw new Error(`${project.name} has no hub data`);
+const build = __BUILD_INFO__;
+const source = hubProvenance(project, build);
+const notes = renderReleaseNotes(project.release?.body ?? null);
+const docsSource = hub.docs
+  ? `${project.url}/tree/${project.default_branch}/${hub.docs.replace(/\/$/, '')}`
+  : null;
+// The docs published on the hub (P2-07) once the repo's docs-deploy workflow runs; the
+// source tree until then.
+const docsUrl = hub.docs_site ? `/${project.slug}/docs/` : docsSource;
+const day = (iso: string) => iso.slice(0, 10);
+const installs = INSTALL_CLIENTS.flatMap((client) => {
+  const snippet = hub.install[client];
+  return snippet ? [{ client, snippet }] : [];
+});
+---
+
+<Base
+  title={`${project.name} | The 40 Thieves`}
+  description={hub.tagline}
+  jsonLd={projectLd(project, build)}
+>
+  <p class="text-sm">
+    <a class="underline underline-offset-2" href="/">
+      The 40 Thieves
+    </a>
+  </p>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight">{project.name}</h1>
+  <p class="mt-4 text-lg text-ink/80">{hub.tagline}</p>
+
+  <section aria-labelledby="claim" class="mt-10">
+    <h2 class="text-xl font-semibold" id="claim">
+      Measured
+    </h2>
+    <p class="mt-2">
+      {hub.claim.text}
+      <span class="text-ink/70">
+        (
+        <a class="underline underline-offset-2" href={hub.claim.source} rel="noopener">
+          source
+        </a>
+        , measured {hub.claim.measured_on})
+      </span>
+    </p>
+  </section>
+
+  <section aria-labelledby="install" class="mt-10">
+    <h2 class="text-xl font-semibold" id="install">
+      Install
+    </h2>
+    {installs.map(({ client, snippet }) => (
+      <InstallSnippet client={client} snippet={snippet} />
+    ))}
+  </section>
+
+  <section aria-labelledby="links" class="mt-10">
+    <h2 class="text-xl font-semibold" id="links">
+      Links
+    </h2>
+    <ul class="mt-2 space-y-1">
+      <li>
+        <a class="underline underline-offset-2" href={project.url} rel="noopener">
+          Repository
+        </a>
+      </li>
+      {docsUrl && (
+        <li>
+          <a class="underline underline-offset-2" href={docsUrl} rel="noopener">
+            Documentation
+          </a>
+        </li>
+      )}
+      {hub.docs_site && docsSource && (
+        <li>
+          <a class="underline underline-offset-2" href={docsSource} rel="noopener">
+            Documentation source
+          </a>
+        </li>
+      )}
+      {project.homepage && project.homepage !== build.site && (
+        <li>
+          <a class="underline underline-offset-2" href={project.homepage} rel="noopener">
+            Homepage
+          </a>
+        </li>
+      )}
+      {project.license && <li>License: {project.license}</li>}
+    </ul>
+  </section>
+
+  {project.release && (
+    <section aria-labelledby="release" class="mt-10">
+      <h2 class="text-xl font-semibold" id="release">
+        Latest release
+      </h2>
+      <p class="mt-2">
+        <a class="underline underline-offset-2" href={project.release.url} rel="noopener">
+          {project.release.name ?? project.release.tag}
+        </a>
+        <span class="text-ink/70"> {day(project.release.published_at)}</span>
+        {project.release.prerelease && <span class="text-ink/70"> (pre-release)</span>}
+      </p>
+      {notes && <div class="release-notes mt-4" set:html={notes} />}
+    </section>
+  )}
+
+  <Provenance source={source} head={project.head} />
+</Base>

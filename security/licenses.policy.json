@@ -1,0 +1,18 @@
+{
+  "$comment": "Licence gate for every package in pnpm-lock.yaml (THE-1738). `denied` are SPDX id prefixes; `*` matches the rest of the id. A package whose licence is missing or unreadable fails as unknown. `exceptions` map a package name to the reason it may ship anyway; each entry is a reviewed commit.",
+  "denied": [
+    "AGPL-*",
+    "GPL-*",
+    "LGPL-*",
+    "SSPL-*",
+    "BUSL-*",
+    "EUPL-*",
+    "CC-BY-NC*",
+    "Elastic-*",
+    "UNLICENSED"
+  ],
+  "unknown": ["", "Unknown", "UNKNOWN", "SEE LICENSE IN *"],
+  "exceptions": {
+    "@img/sharp-*": "sharp's prebuilt platform binaries declare Apache-2.0 AND LGPL-3.0-or-later for the bundled libvips; they run only at build time for Astro's image optimization and nothing from them is shipped to visitors"
+  }
+}

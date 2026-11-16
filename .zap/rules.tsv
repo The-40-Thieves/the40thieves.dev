@@ -1,0 +1,6 @@
+# ZAP baseline triage (tab separated: rule id, IGNORE | WARN | FAIL, reason).
+# Every passive rule not listed here reports at its default level (WARN), which fails the job.
+# Seeded from the first scan on 2026-11-02 (PR 9): Low and Informational alerts only.
+90004	IGNORE	COOP, COEP and CORP are set only on playground pages by design (spec: cross-origin isolation where WASM needs it); the prerendered hub stays embeddable-safe through its CSP and frame-ancestors header.
+10015	IGNORE	Cache-control directives on prerendered HTML are the policy's choice; hashed /_astro assets are immutable, pages revalidate.
+10049	IGNORE	Storable but non-cacheable content is informational; same cache policy as above.

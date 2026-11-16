@@ -1,0 +1,17 @@
+{
+  "name": "@the40thieves/github",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "GitHub App identity for the hub: App JWT, installation token exchange, 50-minute cache (P2-03).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@the40thieves/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,3284 @@
+{
+  "$schema": "https://the40thieves.dev/schemas/sources.json",
+  "version": 1,
+  "origin": "https://the40thieves.dev",
+  "upstream": {
+    "repo": "The-40-Thieves/alexandria-mcp",
+    "commit": "0be8f2c3014380f61a7a102406fb61e4a5c61f5a",
+    "sources": 152
+  },
+  "routes": {
+    "browser-direct": 70,
+    "visitor-key-relay": 67,
+    "quota-relay": 3,
+    "mcp-only": 12
+  },
+  "sources": [
+    {
+      "name": "abc-world",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "ABC News (Australia): world news desk, as an RSS feed. (region: Australia / Asia-Pacific)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.abc.net.au"
+      ],
+      "terms": {
+        "url": "https://www.abc.net.au/news",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "aljazeera",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Al Jazeera: Qatar-based international news network, as an RSS feed. (region: Middle East)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.aljazeera.com"
+      ],
+      "terms": {
+        "url": "https://www.aljazeera.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "allafrica",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "AllAfrica: pan-African news aggregator, as an RDF feed. (region: Africa)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "allafrica.com"
+      ],
+      "terms": {
+        "url": "https://allafrica.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "almonitor",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Al-Monitor: independent coverage and analysis of the Middle East, as an RSS feed. (region: Middle East)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.al-monitor.com"
+      ],
+      "terms": {
+        "url": "https://www.al-monitor.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "apollo",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Cambridge Apollo — Cambridge University institutional repository. Theses, working papers, preprints, and faculty research. DSpace REST API v7, no auth required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.repository.cam.ac.uk"
+      ],
+      "terms": {
+        "url": "https://www.repository.cam.ac.uk",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "arabnews",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Arab News: Saudi Arabia-based English-language daily, as an RSS feed. (region: Middle East)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.arabnews.com"
+      ],
+      "terms": {
+        "url": "https://www.arabnews.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "archive",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Internet Archive — 41M+ texts, scanned books, historical documents.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "archive.org"
+      ],
+      "terms": {
+        "url": "https://archive.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "arxiv",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "arXiv — 2M+ open access preprints: physics, math, CS, biology, economics, statistics. Full HTML text for most papers (2018+).",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "export.arxiv.org"
+      ],
+      "terms": {
+        "url": "https://arxiv.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "attack",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "static",
+      "description": "MITRE ATT&CK Enterprise: adversary tactics and techniques, downloaded once per process as a single STIX bundle and filtered client-side; there is no per-query search API. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "raw.githubusercontent.com"
+      ],
+      "terms": {
+        "url": "https://attack.mitre.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "bhl",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "Biodiversity Heritage Library — natural history, botany, zoology literature. Requires free BHL_API_KEY.",
+      "key": {
+        "env": "BHL_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "www.biodiversitylibrary.org"
+      ],
+      "terms": {
+        "url": "https://www.biodiversitylibrary.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "biorxiv",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "bioRxiv: biological sciences preprints. No API key required. bioRxiv has no free-text search API; search() lists the last 7 days of postings (paged, capped) and filters client-side by title/abstract match, so it can miss older matches or ones past the scan cap. Use read(doi) directly when you already have a DOI.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.biorxiv.org"
+      ],
+      "terms": {
+        "url": "https://www.biorxiv.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "bleepingcomputer",
+      "kind": "rss",
+      "cluster": "security",
+      "freshness": "realtime",
+      "description": "BleepingComputer: computer security and technology news, as an RSS feed.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.bleepingcomputer.com"
+      ],
+      "terms": {
+        "url": "https://www.bleepingcomputer.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "bls",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "BLS (Bureau of Labor Statistics) Public Data API v2: US labor and price statistics (unemployment, CPI, PPI, wages, productivity, JOLTS). No text search exists upstream; search() matches a bundled list of common series. Works keyless (conservative daily cap); set BLS_API_KEY for the registered 500/day tier.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.bls.gov/developers/",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "ccel",
+      "kind": "scrape",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Christian Classics Ethereal Library — patristics, Reformation theology, and Christian philosophy. Augustine, Aquinas, Calvin, Luther, Boethius, Origen, Edwards.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.ccel.org",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "census",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "US Census Bureau dataset catalog: metadata for every dataset the Census Bureau API exposes (ACS, decennial census, economic surveys, and more). Downloaded once per process and filtered client-side; there is no per-query search API. CENSUS_API_KEY is optional and not required for this catalog.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.census.gov"
+      ],
+      "terms": {
+        "url": "https://www.census.gov/data/developers/data-sets.html",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "cervantes",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Cervantes Virtual Library: Spanish and Portuguese literature. Search via the SPARQL linked-data catalog (data.cervantesvirtual.com); full text available for a small curated set of well-known works (Quijote, Lorca, Neruda, Borges, Rulfo, Calderón, San Juan de la Cruz).",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "data.cervantesvirtual.com"
+      ],
+      "terms": {
+        "url": "https://www.cervantesvirtual.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "chroniclingamerica",
+      "kind": "rest",
+      "cluster": "archives",
+      "freshness": "static",
+      "description": "Chronicling America (LOC): full OCR text of US newspapers 1770-1963, now served via the unified loc.gov search/item API.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.loc.gov"
+      ],
+      "terms": {
+        "url": "https://www.loc.gov/collections/chronicling-america/",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "timeout"
+      }
+    },
+    {
+      "name": "circl",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "CIRCL Vulnerability Lookup: full-text search across CVE, GHSA and other vulnerability feeds, run by Luxembourg's CERT. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "vulnerability.circl.lu"
+      ],
+      "terms": {
+        "url": "https://vulnerability.circl.lu",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "cisco-psirt",
+      "kind": "rss",
+      "cluster": "security",
+      "freshness": "realtime",
+      "description": "Cisco PSIRT: Cisco security advisories, as an RSS feed.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "sec.cloudapps.cisco.com"
+      ],
+      "terms": {
+        "url": "https://sec.cloudapps.cisco.com/security/center/publicationListing.x",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "codewiki",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Google Code Wiki — AI-generated continuously updated docs for any GitHub repo. Search indexed repos or fetch architecture overviews, API references, and class diagrams by passing \"{owner}/{repo}\". No auth required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "codewiki.google"
+      ],
+      "terms": {
+        "url": "https://codewiki.google",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "coingecko",
+      "kind": "rest",
+      "cluster": "markets",
+      "freshness": "realtime",
+      "description": "CoinGecko: cryptocurrency search across thousands of coins and tokens, with a price/market-cap/description summary read. Works keyless; set COINGECKO_API_KEY for a higher rate limit.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.coingecko.com"
+      ],
+      "terms": {
+        "url": "https://www.coingecko.com",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "comtrade",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "UN Comtrade: international merchandise trade statistics by HS (Harmonized System) commodity code. The query must be an HS code (e.g. \"0101\" or \"010121\"); any other query returns no results. Uses the keyless public preview endpoint by default.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://comtradeplus.un.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "congress",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "congress.gov API v3: US federal bill search and full text. There is no /v3/search endpoint and /v3/bill's q= parameter is ignored, so search() filters the most recently updated bills by title token. Shares the api.data.gov key family: reads DATA_GOV_API_KEY first, GOVINFO_API_KEY second.",
+      "key": {
+        "env": "DATA_GOV_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.congress.gov"
+      ],
+      "terms": {
+        "url": "https://api.congress.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "context7",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Context7: up-to-date library and framework documentation, indexed by library id (e.g. /reactjs/react.dev). Works keyless; set CONTEXT7_API_KEY for a higher rate.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "context7.com"
+      ],
+      "terms": {
+        "url": "https://context7.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "context7mcp",
+      "kind": "mcp",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Context7 documentation search via its own MCP server (resolve-library-id then query-docs). Works keyless; set CONTEXT7_API_KEY for a higher rate. Additive to the existing context7 REST source. read() cannot target a specific topic (query-docs needs one but read(id) carries no query), so it uses a generic default query; search() again with a specific topic for targeted docs.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://context7.com",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "core",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "CORE: 57M+ open access research papers with full text. Broadest OA academic aggregator across all disciplines. Requires free CORE_API_KEY.",
+      "key": {
+        "env": "CORE_API_KEY",
+        "type": "header",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.core.ac.uk"
+      ],
+      "terms": {
+        "url": "https://core.ac.uk",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "courtlistener",
+      "kind": "rest",
+      "cluster": "law",
+      "freshness": "daily",
+      "description": "CourtListener: US federal and state court opinions. Free Law Project. Requires free COURTLISTENER_API_KEY (125 req/day authenticated cap since 2026-05-07).",
+      "key": {
+        "env": "COURTLISTENER_API_KEY",
+        "type": "header",
+        "daily_cap": 125
+      },
+      "cors": "closed",
+      "hosts": [
+        "www.courtlistener.com"
+      ],
+      "terms": {
+        "url": "https://www.courtlistener.com",
+        "ingest": "allowed"
+      },
+      "route": "quota-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "crossref",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Crossref: authoritative DOI metadata for 160M+ scholarly records, including reference lists and a BibTeX citation. Works keyless; set CONTACT_EMAIL for the polite pool (higher rate limit).",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.crossref.org"
+      ],
+      "terms": {
+        "url": "https://www.crossref.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "ctext",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Chinese Text Project: pre-Qin and Han dynasty classical Chinese texts with English translations. Full-text read requires a registered IP or optional CTEXT_API_KEY per ctext.org/tools/api; search stays keyless.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.ctext.org"
+      ],
+      "terms": {
+        "url": "https://ctext.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "cwe",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "static",
+      "description": "MITRE CWE: the Common Weakness Enumeration, a single-id weakness lookup (e.g. CWE-79 or 79); there is no keyword search endpoint, so any other query returns []. No API key required.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://cwe.mitre.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "dailymaverick",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Daily Maverick: South African news and investigative journalism, as an RSS feed. (region: Africa)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.dailymaverick.co.za"
+      ],
+      "terms": {
+        "url": "https://www.dailymaverick.co.za",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "datacite",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "DataCite: DOI metadata for research datasets and software (Zenodo, Figshare, Dryad, OSF, and more all register here) - one source for the whole data-repository DOI tier. No API key required (3,000 req/5min/IP).",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.datacite.org"
+      ],
+      "terms": {
+        "url": "https://datacite.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "datagov",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "Data.gov — US government open data catalog. 300k+ datasets from federal, state, local, and tribal agencies. No key required. Metadata and discovery.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "catalog.data.gov"
+      ],
+      "terms": {
+        "url": "https://catalog.data.gov",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "dblp",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "DBLP: venue-precise computer science bibliography search. No API key required. Keyless, paced at 1 request/second per dblp's own guidance.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "dblp.org"
+      ],
+      "terms": {
+        "url": "https://dblp.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "name": "dbnomics",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "DBnomics: an aggregator of macroeconomic and statistical datasets from central banks, statistical agencies, and international organizations worldwide. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.db.nomics.world"
+      ],
+      "terms": {
+        "url": "https://db.nomics.world",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "depsdev",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "deps.dev v3: package version metadata (licenses, dependency links, advisories) across npm, PyPI, cargo, Go, Maven and more. Query as system:name (e.g. npm:lodash); a bare name defaults to npm.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.deps.dev"
+      ],
+      "terms": {
+        "url": "https://deps.dev",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 404"
+      }
+    },
+    {
+      "name": "devto",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "realtime",
+      "description": "DEV Community (dev.to) articles. A single-word query filters by tag; a multi-word query uses the site search endpoint, which returns no results for any query as of 2026-09-01 (an upstream issue, see the task report). No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "dev.to"
+      ],
+      "terms": {
+        "url": "https://dev.to",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "digitalnz",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "DigitalNZ: New Zealand digital heritage including Māori and Pacific content. Keyless (rate-limited); set DIGITALNZ_API_KEY for a higher limit.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.digitalnz.org"
+      ],
+      "terms": {
+        "url": "https://digitalnz.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "doab",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Directory of Open Access Books — 70k+ peer-reviewed OA academic monographs across all disciplines. Metadata + external PDF links.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.doabooks.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "TypeError: fetch failed"
+      }
+    },
+    {
+      "name": "doaj",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "DOAJ — Directory of Open Access Journals. 12M+ peer-reviewed OA articles from 20,000+ journals. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "doaj.org"
+      ],
+      "terms": {
+        "url": "https://doaj.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "dpla",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "Digital Public Library of America: 17M+ items from US libraries, archives, and museums. Metadata aggregator. Requires free DPLA_API_KEY.",
+      "key": {
+        "env": "DPLA_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.dp.la"
+      ],
+      "terms": {
+        "url": "https://dp.la",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "dw",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Deutsche Welle: German public international broadcaster, as an RDF feed. (region: Europe)",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "rss.dw.com"
+      ],
+      "terms": {
+        "url": "https://www.dw.com",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "earlyprint",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "EarlyPrint: 60,000+ Early Modern English texts (EEBO/ECCO/Evans TCP), 1473-1700. Linguistically annotated. BlackLab-indexed. Hidden: the eplab.artsci.wustl.edu BlackLab catalog is returning 404 as of 2026-09; re-enable once it returns.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "eplab.artsci.wustl.edu"
+      ],
+      "terms": {
+        "url": "https://earlyprint.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 404"
+      }
+    },
+    {
+      "name": "ecosystems",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Ecosyste.ms Packages: exact package name lookup across every open source package registry it indexes (npm, PyPI, crates.io, RubyGems, and more). Requires CONTACT_EMAIL (sent as a courteous User-Agent mailto).",
+      "key": {
+        "env": "CONTACT_EMAIL",
+        "type": "header",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "packages.ecosyste.ms"
+      ],
+      "terms": {
+        "url": "https://packages.ecosyste.ms",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "eia",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "US Energy Information Administration (EIA) API v2: energy production, consumption, and pricing series. A dotted query (e.g. \"PET.MCRFPUS2.M\") looks up a series directly; otherwise search() filters EIA's route catalog by name (v2 has no keyword-search endpoint). Requires free EIA_API_KEY.",
+      "key": {
+        "env": "EIA_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.eia.gov"
+      ],
+      "terms": {
+        "url": "https://www.eia.gov/opendata",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "epatri",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "EPA Toxics Release Inventory (TRI): facility search by name, part of EPA's tracking of industrial toxic chemical releases. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "data.epa.gov"
+      ],
+      "terms": {
+        "url": "https://www.epa.gov/toxics-release-inventory-tri-program",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "epss",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "FIRST.org EPSS: the Exploit Prediction Scoring System, a probability (0-1) that a CVE will be exploited in the next 30 days. Query as a single CVE id (e.g. CVE-2021-44228); anything else returns []. No API key required.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.first.org/epss",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "eric",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "ERIC — 2M+ education research documents from the US Dept of Education. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.ies.ed.gov"
+      ],
+      "terms": {
+        "url": "https://eric.ed.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "eurlex",
+      "kind": "rest",
+      "cluster": "law",
+      "freshness": "daily",
+      "description": "EUR-Lex (via the CELLAR SPARQL endpoint): EU treaties, regulations, directives, and national implementing measures, searchable by title keyword. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "publications.europa.eu"
+      ],
+      "terms": {
+        "url": "https://eur-lex.europa.eu",
+        "ingest": "attribution"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "europeana",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "Europeana — 50M+ cultural heritage items from European museums, libraries, and archives. Requires free EUROPEANA_API_KEY.",
+      "key": {
+        "env": "EUROPEANA_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.europeana.eu"
+      ],
+      "terms": {
+        "url": "https://www.europeana.eu",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "europmc",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Europe PMC — 43M+ biomedical and life science literature. Full text for open access PMC articles.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.ebi.ac.uk"
+      ],
+      "terms": {
+        "url": "https://europepmc.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "euvd",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "EUVD: the European Union Vulnerability Database, ENISA's aggregation of CVE, GHSA and vendor advisories. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "euvdservices.enisa.europa.eu"
+      ],
+      "terms": {
+        "url": "https://euvd.enisa.europa.eu",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "exploitdb",
+      "kind": "rss",
+      "cluster": "security",
+      "freshness": "realtime",
+      "description": "Exploit-DB: public archive of exploits and vulnerable software, as an RSS feed.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.exploit-db.com"
+      ],
+      "terms": {
+        "url": "https://www.exploit-db.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "federalregister",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "Federal Register: the daily journal of the US federal government (rules, proposed rules, and notices). No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.federalregister.gov"
+      ],
+      "terms": {
+        "url": "https://www.federalregister.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "folha-en",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Folha de S.Paulo: English-language edition, as an RSS feed. (region: Latin America)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "feeds.folha.uol.com.br"
+      ],
+      "terms": {
+        "url": "https://www1.folha.uol.com.br/internacional/en/",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "france24",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "France 24: French public international news channel, as an RSS feed. (region: Europe)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.france24.com"
+      ],
+      "terms": {
+        "url": "https://www.france24.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "frankfurter",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "Frankfurter: free daily exchange rates from the European Central Bank. A query like \"USD\" or \"USD EUR\" looks up live rates; anything else searches currency names. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.frankfurter.dev"
+      ],
+      "terms": {
+        "url": "https://frankfurter.dev",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "fred",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "FRED: the Federal Reserve Bank of St. Louis's economic data API, hundreds of thousands of US and international time series. Requires free FRED_API_KEY.",
+      "key": {
+        "env": "FRED_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.stlouisfed.org"
+      ],
+      "terms": {
+        "url": "https://fred.stlouisfed.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 400"
+      }
+    },
+    {
+      "name": "gallica",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "Gallica/BnF — 5M+ digitized documents from the French national library. Full text available for OCR'd items.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "gallica.bnf.fr"
+      ],
+      "terms": {
+        "url": "https://gallica.bnf.fr",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "gdelt",
+      "kind": "rest",
+      "cluster": "news_global",
+      "freshness": "realtime",
+      "description": "GDELT: the Global Database of Events, Language, and Tone. Full-text search across worldwide news coverage monitored by GDELT. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.gdeltproject.org"
+      ],
+      "terms": {
+        "url": "https://www.gdeltproject.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 429"
+      }
+    },
+    {
+      "name": "ghsa",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "GitHub Security Advisories: advisories curated by GitHub across public repositories and package ecosystems. Works keyless (60 req/h); set GITHUB_TOKEN for a higher rate.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.github.com"
+      ],
+      "terms": {
+        "url": "https://github.com/advisories",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "githubmcp",
+      "kind": "mcp",
+      "cluster": "developer",
+      "freshness": "realtime",
+      "description": "GitHub code search via the official Copilot MCP server (search_code, get_file_contents). Requires GITHUB_TOKEN; hidden without it.",
+      "key": {
+        "env": "GITHUB_TOKEN",
+        "type": "bearer",
+        "daily_cap": null
+      },
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://github.com",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "githubsearch",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "realtime",
+      "description": "GitHub code search: full-text search across public repository contents. Requires GITHUB_TOKEN (the /search/code endpoint rejects unauthenticated requests).",
+      "key": {
+        "env": "GITHUB_TOKEN",
+        "type": "bearer",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.github.com"
+      ],
+      "terms": {
+        "url": "https://github.com/search",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "googlebooks",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "daily",
+      "description": "Google Books: 40M+ books. Full text for public domain titles; preview snippets for in-copyright works. Requires free GOOGLE_BOOKS_API_KEY (the shared keyless quota is exhausted).",
+      "key": {
+        "env": "GOOGLE_BOOKS_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "www.googleapis.com"
+      ],
+      "terms": {
+        "url": "https://books.google.com",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 400"
+      }
+    },
+    {
+      "name": "googlenews",
+      "kind": "rss",
+      "cluster": "news_global",
+      "freshness": "realtime",
+      "description": "Google News: search-by-query RSS aggregator across global news sources.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "news.google.com"
+      ],
+      "terms": {
+        "url": "https://news.google.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "govinfo",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "GovInfo: US Congressional Record, Federal Register, US Code, Bills, CFR, and more. GPO official archive. Requires free GOVINFO_API_KEY.",
+      "key": {
+        "env": "GOVINFO_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.govinfo.gov"
+      ],
+      "terms": {
+        "url": "https://www.govinfo.gov",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "guardian",
+      "kind": "rest",
+      "cluster": "news_global",
+      "freshness": "realtime",
+      "description": "The Guardian Open Platform: full-text search across Guardian journalism, with article body text. Requires free GUARDIAN_API_KEY.",
+      "key": {
+        "env": "GUARDIAN_API_KEY",
+        "type": "query",
+        "daily_cap": 450
+      },
+      "cors": "closed",
+      "hosts": [
+        "content.guardianapis.com"
+      ],
+      "terms": {
+        "url": "https://open-platform.theguardian.com",
+        "ingest": "timeboxed"
+      },
+      "route": "quota-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "gutenberg",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Project Gutenberg — 76k+ public domain books, best for pre-1928 literature.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "gutendex.com"
+      ],
+      "terms": {
+        "url": "https://www.gutenberg.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "hal",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "HAL (Hyper Articles en Ligne): 4M+ full-text French/EU academic deposits with a Solr search across titles, abstracts, and full text. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.archives-ouvertes.fr"
+      ],
+      "terms": {
+        "url": "https://hal.science",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "hansard",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "UK Parliament Hansard: full-text search over Commons and Lords debates, with the complete member-by-member record of any one debate. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "hansard-api.parliament.uk"
+      ],
+      "terms": {
+        "url": "https://hansard.parliament.uk",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "hapi",
+      "kind": "rest",
+      "cluster": "geopolitical",
+      "freshness": "daily",
+      "description": "HDX HAPI (Humanitarian Data Exchange, Humanitarian API): conflict-event and coordination data. A country-name query resolves to a conflict-events lookup; other queries search HAPI's location metadata. Requires free HDX_APP_IDENTIFIER (self-serve).",
+      "key": {
+        "env": "HDX_APP_IDENTIFIER",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "hapi.humdata.org"
+      ],
+      "terms": {
+        "url": "https://hapi.humdata.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "harvardlib",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Harvard LibraryCloud: 20M+ records from Harvard Libraries: books, archives, manuscripts, maps, photographs, theses. Public REST API, no key required. Hidden: api.lib.harvard.edu returns 429 from its load balancer for datacenter clients as of 2026-09; revisit.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.lib.harvard.edu"
+      ],
+      "terms": {
+        "url": "https://library.harvard.edu",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "TypeError: (data.items || []).map is not a function"
+      }
+    },
+    {
+      "name": "hfpapers",
+      "kind": "rest",
+      "cluster": "ai_research",
+      "freshness": "daily",
+      "description": "Hugging Face Papers: a community-curated feed of arXiv papers with upvotes and discussion threads. No API key required. Full text is read via the arxiv source (every id is an arXiv id).",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "huggingface.co"
+      ],
+      "terms": {
+        "url": "https://huggingface.co/papers",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "hn",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "realtime",
+      "description": "Hacker News, via the Algolia HN Search API: stories and comments. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "hn.algolia.com"
+      ],
+      "terms": {
+        "url": "https://news.ycombinator.com",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "hud",
+      "kind": "rest",
+      "cluster": "real_estate",
+      "freshness": "daily",
+      "description": "HUD Fair Market Rents (FMR): US rental cost benchmarks by area, used to set Section 8 voucher payment standards. The query must be a 5-digit ZIP code or a 2-letter state code; any other query returns no results. Requires a bearer HUD_API_TOKEN.",
+      "key": {
+        "env": "HUD_API_TOKEN",
+        "type": "bearer",
+        "daily_cap": null
+      },
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.huduser.gov/portal/dataset/fmr-api.html",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "huggingface",
+      "kind": "mcp",
+      "cluster": "ai_research",
+      "freshness": "daily",
+      "description": "Hugging Face Hub paper search via its MCP hf_fs tool (an hf://papers search). Full text is read via the arxiv source (every result id is a bare arXiv id). No API key required.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://huggingface.co/papers",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "ietf",
+      "kind": "rest",
+      "cluster": "standards",
+      "freshness": "static",
+      "description": "IETF Datatracker: RFC search by title, full text read from rfc-editor.org. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "datatracker.ietf.org"
+      ],
+      "terms": {
+        "url": "https://datatracker.ietf.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "internetclassics",
+      "kind": "scrape",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Internet Classics Archive (MIT) — 440+ classical works in English translation.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "http://classics.mit.edu",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "jina",
+      "kind": "mcp",
+      "cluster": "web",
+      "freshness": "realtime",
+      "description": "Jina AI's live web search and page reader MCP server (search_web, read_url). Works keyless for connecting; set JINA_API_KEY for actual search/read calls (unauthenticated calls return an error result). cluster web, freshness realtime.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://jina.ai",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "jinaarxiv",
+      "kind": "mcp",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Jina AI's search_arxiv tool: arXiv preprint search via the same MCP server as jina. Full text is read via the arxiv source when a result carries an arxiv_id. Works keyless for connecting; set JINA_API_KEY for actual search calls.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://jina.ai",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "jinasearch",
+      "kind": "rest",
+      "cluster": "web",
+      "freshness": "realtime",
+      "description": "Jina AI Search (s.jina.ai): web search returning clean per-result text. Requires JINA_API_KEY; hidden without it to respect the 20 RPM anonymous cap shared across every caller. read() fetches and extracts the linked page.",
+      "key": {
+        "env": "JINA_API_KEY",
+        "type": "bearer",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "s.jina.ai"
+      ],
+      "terms": {
+        "url": "https://jina.ai/reader",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "kev",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "CISA Known Exploited Vulnerabilities catalog: CVEs CISA has confirmed are being actively exploited. Downloaded once per process and filtered client-side; there is no per-query search API.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.cisa.gov"
+      ],
+      "terms": {
+        "url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "legislation",
+      "kind": "rest",
+      "cluster": "law",
+      "freshness": "daily",
+      "description": "legislation.gov.uk — UK Acts of Parliament, Statutory Instruments, and devolved legislation with time-aware full text. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.legislation.gov.uk"
+      ],
+      "terms": {
+        "url": "https://www.legislation.gov.uk",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "legislationscot",
+      "kind": "rest",
+      "cluster": "law",
+      "freshness": "daily",
+      "description": "Scottish Parliament legislation — Acts of the Scottish Parliament (ASP) and Scottish Statutory Instruments (SSI). No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.legislation.gov.uk"
+      ],
+      "terms": {
+        "url": "https://www.legislation.gov.uk",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "lobsters",
+      "kind": "rss",
+      "cluster": "developer",
+      "freshness": "realtime",
+      "description": "Lobsters: a computing-focused link aggregation and discussion community, as an RSS feed.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "lobste.rs"
+      ],
+      "terms": {
+        "url": "https://lobste.rs",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "loc",
+      "kind": "rest",
+      "cluster": "archives",
+      "freshness": "daily",
+      "description": "Library of Congress — US history, maps, newspapers, manuscripts. 170M+ items. Metadata and discovery.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.loc.gov"
+      ],
+      "terms": {
+        "url": "https://www.loc.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "marxists",
+      "kind": "scrape",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Marxists Internet Archive — socialist, anarchist, and critical theory texts. Marx, Engels, Luxemburg, Gramsci, Fanon, Benjamin, and 700+ authors.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.marxists.org",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "mdn",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "MDN Web Docs search: web platform reference and guides. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "developer.mozilla.org"
+      ],
+      "terms": {
+        "url": "https://developer.mozilla.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "mdnmcp",
+      "kind": "mcp",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "MDN Web Docs's own MCP server: web platform reference and guides, with full document text via get-doc. No API key required. Additive to the existing mdn REST source, which it falls back to when the MCP server is unreachable.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://developer.mozilla.org",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "medrxiv",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "medRxiv: clinical and health sciences preprints. No API key required. medRxiv has no free-text search API; search() lists the last 7 days of postings (paged, capped) and filters client-side by title/abstract match, so it can miss older matches or ones past the scan cap. Use read(doi) directly when you already have a DOI.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.biorxiv.org"
+      ],
+      "terms": {
+        "url": "https://www.medrxiv.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "msrc",
+      "kind": "rss",
+      "cluster": "security",
+      "freshness": "realtime",
+      "description": "Microsoft Security Response Center: Microsoft product security update guide, as an RSS feed.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.msrc.microsoft.com"
+      ],
+      "terms": {
+        "url": "https://msrc.microsoft.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nara",
+      "kind": "rest",
+      "cluster": "archives",
+      "freshness": "daily",
+      "description": "US National Archives (NARA): 32M+ descriptions of historical government records: war diaries, presidential papers, military records, federal agencies. Requires free NARA_API_KEY.",
+      "key": {
+        "env": "NARA_API_KEY",
+        "type": "header",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "catalog.archives.gov"
+      ],
+      "terms": {
+        "url": "https://catalog.archives.gov",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "name": "nasa",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "NASA NTRS — space science, aeronautics, and engineering technical reports. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "ntrs.nasa.gov"
+      ],
+      "terms": {
+        "url": "https://ntrs.nasa.gov",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nasaads",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "NASA ADS — Astrophysics Data System. Premier portal for astronomy, astrophysics, and physics research. Requires NASA_ADS_API_KEY (free at ui.adsabs.harvard.edu).",
+      "key": {
+        "env": "NASA_ADS_API_KEY",
+        "type": "bearer",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.adsabs.harvard.edu"
+      ],
+      "terms": {
+        "url": "https://ui.adsabs.harvard.edu",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "nbnorway",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "National Library of Norway — digitized books, manuscripts, and newspapers with OCR text in JSON. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.nb.no"
+      ],
+      "terms": {
+        "url": "https://www.nb.no",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "ndl",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "Japan National Diet Library — 350k+ out-of-copyright digitized books. Metadata and discovery; full text via NDL Digital Collections.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "ndlsearch.ndl.go.jp"
+      ],
+      "terms": {
+        "url": "https://ndlsearch.ndl.go.jp",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "newsdata",
+      "kind": "rest",
+      "cluster": "news_global",
+      "freshness": "realtime",
+      "description": "newsdata.io: real-time global news article search. Requires free NEWSDATA_API_KEY.",
+      "key": {
+        "env": "NEWSDATA_API_KEY",
+        "type": "query",
+        "daily_cap": 180
+      },
+      "cors": "open",
+      "hosts": [
+        "newsdata.io"
+      ],
+      "terms": {
+        "url": "https://newsdata.io",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "nhk",
+      "kind": "rest",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "NHK World News: Japanese public broadcaster, English-language world news headlines.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www3.nhk.or.jp"
+      ],
+      "terms": {
+        "url": "https://www3.nhk.or.jp/nhkworld",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nih",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "NIH RePORTER — National Institutes of Health funded research projects and abstracts. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.reporter.nih.gov"
+      ],
+      "terms": {
+        "url": "https://reporter.nih.gov",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nikkeiasia",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Nikkei Asia: business and economic news from Asia, as an RSS feed. (region: Asia)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "asia.nikkei.com"
+      ],
+      "terms": {
+        "url": "https://asia.nikkei.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nist-csrc",
+      "kind": "rss",
+      "cluster": "standards",
+      "freshness": "realtime",
+      "description": "NIST Computer Security Resource Center: draft publications currently open for public comment, as an Atom feed.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "csrc.nist.gov"
+      ],
+      "terms": {
+        "url": "https://csrc.nist.gov/publications/drafts-open-for-comment",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nsf",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "NSF Awards — National Science Foundation research grants and abstracts across all scientific disciplines.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.nsf.gov"
+      ],
+      "terms": {
+        "url": "https://www.nsf.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "nvd",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "NIST NVD: the National Vulnerability Database, CVE records enriched with CVSS scores and CPE matches. Works keyless at a slow pace; set NVD_API_KEY for a faster one.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "services.nvd.nist.gov"
+      ],
+      "terms": {
+        "url": "https://nvd.nist.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "openalex",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "OpenAlex: 200M+ scholarly works. Free replacement for Scopus/Web of Science. Covers all disciplines. No API key required (set CONTACT_EMAIL for the polite pool, or OPENALEX_API_KEY for the paid tier).",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.openalex.org"
+      ],
+      "terms": {
+        "url": "https://openalex.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "opencitations",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "OpenCitations Index v2: an open citation graph. search(doi) returns citing works; read(doi) returns the outgoing reference list. No article text - not ingestible. Optional OPENCITATIONS_ACCESS_TOKEN for a higher rate limit.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.opencitations.net"
+      ],
+      "terms": {
+        "url": "https://opencitations.net",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "openfda",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "openFDA drug enforcement reports: FDA drug recalls, searchable by product description. Works keyless; set OPENFDA_API_KEY for a higher rate limit.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.fda.gov"
+      ],
+      "terms": {
+        "url": "https://open.fda.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 404"
+      }
+    },
+    {
+      "name": "openiti",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "OpenITI: 10,000+ Islamicate texts in Arabic and Persian (OpenITI mARkdown). Set GITHUB_TOKEN for full-corpus code search; without it, search falls back to a small set of per-century data repos (GitHub code search now requires auth even for public repos).",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.github.com"
+      ],
+      "terms": {
+        "url": "https://openiti.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "openlibrary",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "daily",
+      "description": "Open Library — 30M+ records. Metadata and discovery; links to Archive.org for text.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "openlibrary.org"
+      ],
+      "terms": {
+        "url": "https://openlibrary.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "ora",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Oxford ORA: Oxford University Research Archive. Oxford theses, preprints, working papers, and the Oxford Text Archive (classical texts, TEI/XML). No auth required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "ora.ox.ac.uk"
+      ],
+      "terms": {
+        "url": "https://ora.ox.ac.uk",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "osf",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "OSF Preprints — PsyArXiv, SocArXiv, EarthArXiv, engrXiv, and more via Open Science Framework. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.osf.io"
+      ],
+      "terms": {
+        "url": "https://osf.io",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "osti",
+      "kind": "rest",
+      "cluster": "science",
+      "freshness": "daily",
+      "description": "DOE OSTI — Department of Energy research: nuclear, energy, physics, materials science. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.osti.gov"
+      ],
+      "terms": {
+        "url": "https://www.osti.gov",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "osv",
+      "kind": "rest",
+      "cluster": "security",
+      "freshness": "daily",
+      "description": "OSV.dev: the Open Source Vulnerability database aggregating advisories from GitHub, PyPI, npm, RustSec and more. Query as a direct advisory id (CVE-/GHSA-/PYSEC-/RUSTSEC-/GO-prefixed) for one record, or as ecosystem:name (e.g. npm:lodash) for a package advisory list. No API key required.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://osv.dev",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "paperswithcode",
+      "kind": "rest",
+      "cluster": "ai_research",
+      "freshness": "daily",
+      "description": "Papers with Code: machine learning papers cross-referenced with their code implementations. Queries the community mirror at paperswithcode.co (the original paperswithcode.com API was retired 2025-07-24). No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "paperswithcode.co"
+      ],
+      "terms": {
+        "url": "https://paperswithcode.co",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "peps",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Python Enhancement Proposals (PEPs): index of every PEP by number and title. Downloaded once per process and filtered client-side; there is no per-query search API. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "peps.python.org"
+      ],
+      "terms": {
+        "url": "https://peps.python.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "perseus",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Perseus Digital Library: classical Greek, Latin, and Arabic texts with translations, served via the Scaife reading environment.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://scaife.perseus.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "plos",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "PLOS — Public Library of Science journals. 100% open access. Biology, medicine, genetics, computational biology. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.plos.org"
+      ],
+      "terms": {
+        "url": "https://www.plos.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "projectruneberg",
+      "kind": "scrape",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Project Runeberg — Scandinavian literature and cultural heritage. Ibsen, Strindberg, Lagerlöf, Andersen, Kierkegaard.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://runeberg.org",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "projectzero",
+      "kind": "rss",
+      "cluster": "security",
+      "freshness": "realtime",
+      "description": "Google Project Zero: vulnerability research blog, as an Atom feed.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "projectzero.google"
+      ],
+      "terms": {
+        "url": "https://projectzero.google",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "pubmed",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "PubMed (NCBI E-utilities): MeSH-aware biomedical literature search. read() returns PMC BioC full text when a PMCID exists, otherwise the PubMed abstract via efetch. Works keyless (3 rps); set NCBI_API_KEY for 10 rps.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "eutils.ncbi.nlm.nih.gov"
+      ],
+      "terms": {
+        "url": "https://pubmed.ncbi.nlm.nih.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "readthedocs",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Read the Docs: server-side search across hosted project documentation. Scope a query to one project with a \"project:<slug>\" prefix (e.g. \"project:requests authentication\") - an unscoped query returns nothing. No API key required for public projects.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "readthedocs.org"
+      ],
+      "terms": {
+        "url": "https://readthedocs.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "regulations",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "Regulations.gov API v4: US federal rulemaking dockets and public comment documents. Shares the api.data.gov key family: reads DATA_GOV_API_KEY first, GOVINFO_API_KEY second.",
+      "key": {
+        "env": "DATA_GOV_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.regulations.gov"
+      ],
+      "terms": {
+        "url": "https://www.regulations.gov",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "reliefweb",
+      "kind": "rest",
+      "cluster": "geopolitical",
+      "freshness": "daily",
+      "description": "ReliefWeb: humanitarian reports and situation updates from UN OCHA and partner organizations. Requires a registered RELIEFWEB_APPNAME.",
+      "key": {
+        "env": "RELIEFWEB_APPNAME",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.reliefweb.int"
+      ],
+      "terms": {
+        "url": "https://reliefweb.int",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "rentcast",
+      "kind": "rest",
+      "cluster": "real_estate",
+      "freshness": "daily",
+      "description": "RentCast: US rental and sale market statistics by ZIP code. Requires free-tier RENTCAST_API_KEY (50 requests/month).",
+      "key": {
+        "env": "RENTCAST_API_KEY",
+        "type": "header",
+        "daily_cap": 1
+      },
+      "cors": "open",
+      "hosts": [
+        "api.rentcast.io"
+      ],
+      "terms": {
+        "url": "https://www.rentcast.io",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "restofworld",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "Rest of World: technology news from the Global South, as an RSS feed. (region: Global South)",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "restofworld.org"
+      ],
+      "terms": {
+        "url": "https://restofworld.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "sacredtexts",
+      "kind": "scrape",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Sacred-Texts.com: curated registry of religious/philosophical texts: Quran, Sufi corpus, Vedanta, Buddhism, Taoism, Hermeticism, Christian mysticism. The live site is bot-gated (HTTP 403); read() returns metadata only.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://sacred-texts.com",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "scmp",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "South China Morning Post: Hong Kong-based news covering China and Asia, as an RSS feed. (region: East Asia)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.scmp.com"
+      ],
+      "terms": {
+        "url": "https://www.scmp.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "searxng",
+      "kind": "rest",
+      "cluster": "web",
+      "freshness": "realtime",
+      "description": "SearXNG: a self-hosted, privacy-respecting metasearch engine aggregating results across many upstream search engines. Requires SEARXNG_URL (a deployment-specific instance URL); hidden without it. read() fetches and extracts the linked page.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://docs.searxng.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "Error: searxng requires the SEARXNG_URL environment variable"
+      }
+    },
+    {
+      "name": "secedgar",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "daily",
+      "description": "SEC EDGAR full-text search: US public company filings (10-K, 10-Q, 8-K, and more) since 2001. Requires CONTACT_EMAIL for the mandatory identifying User-Agent (SEC 403s unidentified requests); 10 rps hard cap.",
+      "key": {
+        "env": "CONTACT_EMAIL",
+        "type": "header",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "efts.sec.gov"
+      ],
+      "terms": {
+        "url": "https://www.sec.gov/edgar",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "semanticscholar",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Semantic Scholar: 200M+ academic papers. Abstracts always available; OA PDF links for open access papers. Supports library_recommend. Set SEMANTIC_SCHOLAR_API_KEY for a dedicated rate pool.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "api.semanticscholar.org"
+      ],
+      "terms": {
+        "url": "https://www.semanticscholar.org",
+        "ingest": "attribution"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 429"
+      }
+    },
+    {
+      "name": "smithsonian",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "daily",
+      "description": "Smithsonian Institution — 14M+ records across all museums: American history, air & space, natural history, art, military artifacts. Requires SMITHSONIAN_API_KEY (free at api.data.gov).",
+      "key": {
+        "env": "SMITHSONIAN_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "open",
+      "hosts": [
+        "api.si.edu"
+      ],
+      "terms": {
+        "url": "https://www.si.edu",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 403"
+      }
+    },
+    {
+      "name": "springer",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Springer Nature — 16M+ articles via Meta API (all content, abstracts) + OA API (open access full text). Requires SPRINGER_META_API_KEY and SPRINGER_OA_API_KEY (free at dev.springernature.com).",
+      "key": {
+        "env": "SPRINGER_META_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.springernature.com"
+      ],
+      "terms": {
+        "url": "https://www.springernature.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "stackexchange",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "realtime",
+      "description": "Stack Overflow (via the Stack Exchange API): advanced full-text question search. Works keyless at the shared rate limit; set STACKEXCHANGE_KEY for a dedicated pool.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.stackexchange.com"
+      ],
+      "terms": {
+        "url": "https://stackoverflow.com",
+        "ingest": "attribution"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "standardebooks",
+      "kind": "scrape",
+      "cluster": "literature",
+      "freshness": "static",
+      "description": "Standard Ebooks — carefully typeset and proofread public domain ebooks.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://standardebooks.org",
+        "ingest": "allowed"
+      },
+      "route": "mcp-only",
+      "probe": {
+        "status": "skipped",
+        "detail": null
+      }
+    },
+    {
+      "name": "swiftevolution",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "Swift Evolution proposals: every accepted, rejected, or in-review Swift language proposal with its status. Downloaded once per process and filtered client-side; there is no per-query search API. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "download.swift.org"
+      ],
+      "terms": {
+        "url": "https://www.swift.org/swift-evolution",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "tavily",
+      "kind": "rest",
+      "cluster": "web",
+      "freshness": "realtime",
+      "description": "Tavily: a web search API purpose-built for LLM agents and RAG pipelines, with results pre-summarized for relevance. Requires TAVILY_API_KEY; hidden without it. read() fetches and extracts the linked page.",
+      "key": {
+        "env": "TAVILY_API_KEY",
+        "type": "bearer",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.tavily.com"
+      ],
+      "terms": {
+        "url": "https://tavily.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "tc39",
+      "kind": "rest",
+      "cluster": "developer",
+      "freshness": "daily",
+      "description": "TC39 (ECMAScript) proposals: every JavaScript language proposal with its current stage. Downloaded once per process and filtered client-side; there is no per-query search API. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "tc39.es"
+      ],
+      "terms": {
+        "url": "https://tc39.es",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "thediplomat",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "The Diplomat: current affairs magazine covering the Asia-Pacific, as an RSS feed. (region: Asia-Pacific)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "thediplomat.com"
+      ],
+      "terms": {
+        "url": "https://thediplomat.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "thehindu-intl",
+      "kind": "rss",
+      "cluster": "news_regional",
+      "freshness": "realtime",
+      "description": "The Hindu: international news desk of the Indian daily, as an RSS feed. (region: South Asia)",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.thehindu.com"
+      ],
+      "terms": {
+        "url": "https://www.thehindu.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "trove",
+      "kind": "rest",
+      "cluster": "archives",
+      "freshness": "daily",
+      "description": "Trove (NLA Australia): 340M+ items from Australian libraries, newspapers, archives. Requires free TROVE_API_KEY. Full text is fetched only for newspaper articles that carry a fulltext link; other categories stay metadata-only. Governed by an NLA data agreement: live calls only, no storage, capped full-text reads per session.",
+      "key": {
+        "env": "TROVE_API_KEY",
+        "type": "query",
+        "daily_cap": null
+      },
+      "cors": "closed",
+      "hosts": [
+        "api.trove.nla.gov.au"
+      ],
+      "terms": {
+        "url": "https://trove.nla.gov.au",
+        "ingest": "forbidden"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "twelvedata",
+      "kind": "rest",
+      "cluster": "markets",
+      "freshness": "realtime",
+      "description": "Twelve Data: stock, ETF, and forex symbol search across global exchanges, with a daily time series read. Requires free TWELVEDATA_API_KEY.",
+      "key": {
+        "env": "TWELVEDATA_API_KEY",
+        "type": "query",
+        "daily_cap": 750
+      },
+      "cors": "open",
+      "hosts": [
+        "api.twelvedata.com"
+      ],
+      "terms": {
+        "url": "https://twelvedata.com",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "ucdp",
+      "kind": "rest",
+      "cluster": "geopolitical",
+      "freshness": "daily",
+      "description": "UCDP (Uppsala Conflict Data Program) Georeferenced Event Dataset: individually coded events of organized violence, searchable by country. Requires free UCDP_TOKEN.",
+      "key": {
+        "env": "UCDP_TOKEN",
+        "type": "header",
+        "daily_cap": 4500
+      },
+      "cors": "closed",
+      "hosts": [
+        "ucdpapi.pcr.uu.se"
+      ],
+      "terms": {
+        "url": "https://ucdp.uu.se",
+        "ingest": "allowed"
+      },
+      "route": "quota-relay",
+      "probe": {
+        "status": "ok",
+        "detail": "HTTP 401"
+      }
+    },
+    {
+      "name": "ukparliament",
+      "kind": "rest",
+      "cluster": "government",
+      "freshness": "daily",
+      "description": "UK Parliament Bills API: public legislation before the House of Commons and House of Lords. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "bills-api.parliament.uk"
+      ],
+      "terms": {
+        "url": "https://bills.parliament.uk",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "w3c",
+      "kind": "rest",
+      "cluster": "standards",
+      "freshness": "daily",
+      "description": "W3C specifications: the first 1000 (of the full catalog), downloaded once per process and filtered client-side by title, since the upstream API ignores its own q= search parameter. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.w3.org"
+      ],
+      "terms": {
+        "url": "https://www.w3.org/TR",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "wdl",
+      "kind": "rest",
+      "cluster": "culture",
+      "freshness": "static",
+      "description": "World Digital Library (via LOC) — 19k+ rare and unique cultural heritage items from 200 countries, 8000 BCE–present. Maps, manuscripts, photographs, films, sound recordings.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "www.loc.gov"
+      ],
+      "terms": {
+        "url": "https://www.loc.gov/collections/world-digital-library/",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "webfetch",
+      "kind": "rest",
+      "cluster": "web",
+      "freshness": "realtime",
+      "description": "Direct web fetch: search() always returns []; read(id=<url>) fetches and extracts the text of any http(s) page via the fetch tier (defuddle, then jina, then crawl4ai, then Browser Run, whichever is configured). Use this to read a URL surfaced by another source, or any URL the caller already has.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://github.com/The-40-Thieves/alexandria-mcp",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "no request observed"
+      }
+    },
+    {
+      "name": "wikicurrent",
+      "kind": "rest",
+      "cluster": "news_global",
+      "freshness": "daily",
+      "description": "Wikipedia Portal:Current events: the collaboratively edited daily log of world news, parsed from the portal's rendered HTML. No API key required.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "en.wikipedia.org"
+      ],
+      "terms": {
+        "url": "https://en.wikipedia.org/wiki/Portal:Current_events",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "wikidata",
+      "kind": "rest",
+      "cluster": "web",
+      "freshness": "daily",
+      "description": "Wikidata: entity search (wbsearchentities) across 100M+ structured knowledge-base items. Entity search only, no full-text read - use library_read for the entity page URL. Works keyless; set CONTACT_EMAIL for a compliant contact User-Agent.",
+      "key": null,
+      "cors": "closed",
+      "hosts": [
+        "www.wikidata.org"
+      ],
+      "terms": {
+        "url": "https://www.wikidata.org",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "wikipedia",
+      "kind": "rest",
+      "cluster": "web",
+      "freshness": "daily",
+      "description": "Wikipedia (English): full-text page search plus full article read (summary + mobile-html extraction). CC BY-SA text: attribution is a license condition, not optional. Works keyless; set CONTACT_EMAIL for a compliant contact User-Agent.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "en.wikipedia.org"
+      ],
+      "terms": {
+        "url": "https://en.wikipedia.org",
+        "ingest": "attribution"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "wikisource",
+      "kind": "rest",
+      "cluster": "literature",
+      "freshness": "daily",
+      "description": "Wikisource — multilingual library of free-content source texts in 70+ languages.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "en.wikisource.org"
+      ],
+      "terms": {
+        "url": "https://wikisource.org",
+        "ingest": "attribution"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "worldbank",
+      "kind": "rest",
+      "cluster": "economics",
+      "freshness": "static",
+      "description": "World Bank Indicators API v2: 29.5k+ development indicators (GDP, poverty, health, education, and more) across every country. No server-side search - search() filters the full indicator catalog client-side by name/description match. No API key required.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "api.worldbank.org"
+      ],
+      "terms": {
+        "url": "https://data.worldbank.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    {
+      "name": "youtube",
+      "kind": "rest",
+      "cluster": "video",
+      "freshness": "realtime",
+      "description": "YouTube: video search via the official Data API v3 (requires YOUTUBE_API_KEY, ~100 searches/day). Transcripts prefer Supadata (SUPADATA_API_KEY, a maintained third-party transcript service) when configured; otherwise fall back to an undocumented endpoint since no official transcript API exists for third-party videos, same risk profile as codewiki (can break without notice, ToS gray area for automated access; low-volume personal/research use only). No ingest: transcripts stay read-only, never indexed.",
+      "key": null,
+      "cors": "unknown",
+      "hosts": [],
+      "terms": {
+        "url": "https://www.youtube.com",
+        "ingest": "allowed"
+      },
+      "route": "visitor-key-relay",
+      "probe": {
+        "status": "failed",
+        "detail": "Error: youtube requires YOUTUBE_API_KEY"
+      }
+    },
+    {
+      "name": "zenodo",
+      "kind": "rest",
+      "cluster": "academic",
+      "freshness": "daily",
+      "description": "Zenodo — CERN open repository: papers, datasets, software. 2M+ records across all disciplines.",
+      "key": null,
+      "cors": "open",
+      "hosts": [
+        "zenodo.org"
+      ],
+      "terms": {
+        "url": "https://zenodo.org",
+        "ingest": "allowed"
+      },
+      "route": "browser-direct",
+      "probe": {
+        "status": "ok",
+        "detail": null
+      }
+    }
+  ]
+}

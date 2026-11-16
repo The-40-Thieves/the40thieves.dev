@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { notFoundLd } from '../lib/json-ld.ts';
+---
+
+<Base
+  title="Not found"
+  description="This page does not exist on the40thieves.dev."
+  jsonLd={notFoundLd(__BUILD_INFO__)}
+>
+  <h1 class="text-4xl font-semibold tracking-tight">Not found</h1>
+  <p class="mt-6 text-lg">
+    <a class="underline underline-offset-4 hover:no-underline" href="/">
+      Back to the hub
+    </a>
+  </p>
+</Base>
