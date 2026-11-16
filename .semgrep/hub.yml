@@ -3,8 +3,8 @@ rules:
     languages: [javascript, typescript]
     severity: ERROR
     message: >-
-      A "message" event handler must check event.origin before it trusts the data
-     . Compare against an allowlist, then read event.data.
+      A "message" event handler must check event.origin before it trusts the data.
+      Compare against an allowlist, then read event.data.
     metadata:
       category: security
       cwe: 'CWE-346: Origin Validation Error'
