@@ -38,7 +38,7 @@ const sameUrl = (a: string, b: string | null) => a.replace(/\/$/, '') === b?.rep
 const homepage =
   project.homepage &&
   !sameUrl(project.homepage, build.site) &&
-  !sameUrl(project.homepage, published)
+  !sameUrl(project.homepage, published && new URL(published, build.site).href)
     ? project.homepage
     : null;
 const day = (iso: string) => iso.slice(0, 10);
