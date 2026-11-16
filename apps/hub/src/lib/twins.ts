@@ -214,7 +214,13 @@ export function projectTwin(project: ProjectEntry, build: BuildInfo): string {
   lines.push('## Links', '', `- Repository: ${project.url}`);
   if (docsUrl) lines.push(`- Documentation: ${docsUrl}`);
   if (published && docsSource) lines.push(`- Documentation source: ${docsSource}`);
-  if (project.homepage && project.homepage !== build.site) {
+  // A repo whose homepage is the hub or its own published docs gets no separate Homepage line.
+  const sameUrl = (a: string, b: string | null) => a.replace(/\/$/, '') === b?.replace(/\/$/, '');
+  if (
+    project.homepage &&
+    !sameUrl(project.homepage, build.site) &&
+    !sameUrl(project.homepage, published)
+  ) {
     lines.push(`- Homepage: ${project.homepage}`);
   }
   if (project.license) lines.push(`- License: ${project.license}`);
