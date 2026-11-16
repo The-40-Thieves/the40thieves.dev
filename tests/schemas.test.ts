@@ -41,6 +41,15 @@ test('docs_site defaults to false and must be a boolean', () => {
   expect(() => hubJsonSchema.parse({ ...hub, docs_site: 'yes' })).toThrow();
 });
 
+test('docs_url is optional and must be an https url', () => {
+  expect(hubJsonSchema.parse(hub).docs_url).toBeUndefined();
+  const url = 'https://docs.the40thieves.dev/codecalc';
+  expect(hubJsonSchema.parse({ ...hub, docs_url: url }).docs_url).toBe(url);
+  for (const bad of ['http://docs.the40thieves.dev/codecalc', '/codecalc/docs/', 'docs']) {
+    expect(() => hubJsonSchema.parse({ ...hub, docs_url: bad }), bad).toThrow();
+  }
+});
+
 test('a placeholder claim or tagline is rejected', () => {
   for (const text of ['TODO measure this', 'placeholder claim', 'Lorem ipsum', 'tbd']) {
     expect(() => hubJsonSchema.parse({ ...hub, claim: { ...hub.claim, text } })).toThrow(
@@ -157,6 +166,7 @@ test('the published JSON Schema carries its id and allows the editor keys on top
       'install',
       'docs',
       'docs_site',
+      'docs_url',
       'listed',
     ]),
   );

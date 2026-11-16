@@ -1,0 +1,18 @@
+{
+  "$comment": "Hub-side hub.json for The-40-Thieves/reliquary-tc until the repo carries its own (P1-04). Facts read from the repo README and the published tool catalog on 2026-11-16.",
+  "tagline": "Governed, agent-ready Obsidian vault access over MCP: auth, folder ACLs, confirmation on destructive operations and an audit log on every tool call.",
+  "claim": {
+    "text": "185 MCP tools, each with a generated reference page that CI checks against the tool registry.",
+    "source": "https://docs.the40thieves.dev/reliquary-tc/tools/tool-catalog",
+    "measured_on": "2026-11-16"
+  },
+  "install": {
+    "shell": "npx reliquary-tc /path/to/vault",
+    "claude-code": "claude plugin marketplace add The-40-Thieves/reliquary-tc && claude plugin install reliquary-tc@the-40-thieves",
+    "cursor": "{ \"mcpServers\": { \"reliquary-tc\": { \"command\": \"npx\", \"args\": [\"-y\", \"reliquary-tc\"], \"env\": { \"RELIQUARY_TC_CONFIG\": \"/ABS/config.json\" } } } }",
+    "vscode": "{ \"servers\": { \"reliquary-tc\": { \"command\": \"npx\", \"args\": [\"-y\", \"reliquary-tc\"], \"env\": { \"RELIQUARY_TC_CONFIG\": \"/ABS/config.json\" } } } }"
+  },
+  "docs": "docs/",
+  "docs_url": "https://docs.the40thieves.dev/reliquary-tc",
+  "listed": true
+}

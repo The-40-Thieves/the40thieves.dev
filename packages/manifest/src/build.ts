@@ -97,7 +97,8 @@ function projectFor(entry: ProjectEntry, build: BuildInfo): ManifestProject {
     page: pagePath(entry),
     release: entry.release ? releaseFor(entry.release) : null,
     install: installFor(entry),
-    docs: entry.hub?.docs_site ? `${build.site}/${entry.slug}/docs/` : null,
+    docs:
+      entry.hub?.docs_url ?? (entry.hub?.docs_site ? `${build.site}/${entry.slug}/docs/` : null),
     source: hubProvenance(entry, build),
   };
 }

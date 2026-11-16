@@ -52,6 +52,17 @@ export const hubJsonSchema = z
      * carries the docs URL. The repository tree stays the link until then.
      */
     docs_site: z.boolean().default(false),
+    /**
+     * Where the project's published documentation lives when it is not on the hub's own
+     * `/<slug>/docs/` path, such as the docs hub at `docs.the40thieves.dev`. https only. When
+     * set it is the documentation link and the manifest's docs URL, ahead of `docs_site`.
+     */
+    docs_url: z
+      .url({ protocol: /^https$/ })
+      .optional()
+      .describe(
+        'https URL of documentation published outside the hub. When set it is the documentation link and takes precedence over docs_site.',
+      ),
     /** Listed projects get a product page and a place on the home page. */
     listed: z.boolean().default(false),
   })
@@ -79,7 +90,7 @@ export function hubJsonSchemaDocument(): Record<string, unknown> {
     $id: HUB_SCHEMA_ID,
     title: 'hub.json',
     description:
-      'What a repository tells the hub at the40thieves.dev about itself: tagline, one measured claim with its source and date, install snippets per client, docs path and whether the docs are published on the hub.',
+      'What a repository tells the hub at the40thieves.dev about itself: tagline, one measured claim with its source and date, install snippets per client, docs path, whether the docs are published on the hub (docs_site), or the URL of docs published elsewhere (docs_url, which takes precedence over docs_site).',
     ...generated,
     properties: {
       $schema: { type: 'string', description: `Optional; ${HUB_SCHEMA_ID}` },
