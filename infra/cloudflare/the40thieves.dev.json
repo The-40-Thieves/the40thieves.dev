@@ -2,11 +2,35 @@
   "zone": "the40thieves.dev",
   "dns": [
     {
+      "type": "TXT",
+      "name": "_acme-challenge.docs.the40thieves.dev",
+      "content": "\"odj8BT2InMaQNSW0OHLO98MV5gS78ryQLp2vrQ8ZJlE\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "Mintlify TLS certificate validation for docs.the40thieves.dev"
+    },
+    {
+      "type": "TXT",
+      "name": "_cf-custom-hostname.docs.the40thieves.dev",
+      "content": "\"02022cd1-877a-4dd4-89c5-84fdf0179524\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "Mintlify custom hostname ownership check for docs.the40thieves.dev"
+    },
+    {
       "type": "AAAA",
       "name": "*.the40thieves.dev",
       "content": "100::",
       "proxied": true,
       "ttl": 1
+    },
+    {
+      "type": "CNAME",
+      "name": "docs.the40thieves.dev",
+      "content": "cname.mintlify.builders",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "Docs site on Mintlify (DNS only; Mintlify terminates TLS)"
     },
     {
       "type": "AAAA",
