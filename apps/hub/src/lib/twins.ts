@@ -188,7 +188,8 @@ export function projectTwin(project: ProjectEntry, build: BuildInfo): string {
   const docsSource = hub.docs
     ? `${project.url}/tree/${project.default_branch}/${hub.docs.replace(/\/$/, '')}`
     : null;
-  const docsUrl = hub.docs_site ? `${build.site}/${project.slug}/docs/` : docsSource;
+  const published = hub.docs_url ?? (hub.docs_site ? `${build.site}/${project.slug}/docs/` : null);
+  const docsUrl = published ?? docsSource;
   const lines = [
     `# ${project.name}`,
     '',
@@ -212,7 +213,7 @@ export function projectTwin(project: ProjectEntry, build: BuildInfo): string {
   }
   lines.push('## Links', '', `- Repository: ${project.url}`);
   if (docsUrl) lines.push(`- Documentation: ${docsUrl}`);
-  if (hub.docs_site && docsSource) lines.push(`- Documentation source: ${docsSource}`);
+  if (published && docsSource) lines.push(`- Documentation source: ${docsSource}`);
   if (project.homepage && project.homepage !== build.site) {
     lines.push(`- Homepage: ${project.homepage}`);
   }

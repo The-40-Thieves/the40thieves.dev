@@ -30,8 +30,9 @@ const docsSource = hub.docs
   ? `${project.url}/tree/${project.default_branch}/${hub.docs.replace(/\/$/, '')}`
   : null;
 // The docs published on the hub (P2-07) once the repo's docs-deploy workflow runs; the
-// source tree until then.
-const docsUrl = hub.docs_site ? `/${project.slug}/docs/` : docsSource;
+// source tree until then. A project whose docs live elsewhere (the docs hub) names the URL.
+const published = hub.docs_url ?? (hub.docs_site ? `/${project.slug}/docs/` : null);
+const docsUrl = published ?? docsSource;
 const day = (iso: string) => iso.slice(0, 10);
 const installs = INSTALL_CLIENTS.flatMap((client) => {
   const snippet = hub.install[client];
@@ -94,7 +95,7 @@ const installs = INSTALL_CLIENTS.flatMap((client) => {
           </a>
         </li>
       )}
-      {hub.docs_site && docsSource && (
+      {published && docsSource && (
         <li>
           <a class="underline underline-offset-2" href={docsSource} rel="noopener">
             Documentation source
