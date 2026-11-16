@@ -32,11 +32,12 @@ jobs:
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
       CLOUDFLARE_DRIFT_TOKEN: ${{ secrets.CLOUDFLARE_DRIFT_TOKEN }}
       SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+      PUBLIC_HYGIENE_PATTERNS: ${{ secrets.PUBLIC_HYGIENE_PATTERNS }}
 
   deploy:
     name: deploy
     needs: ci
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     environment:
       name: production
       url: https://the40thieves.dev
@@ -130,7 +131,7 @@ jobs:
   deploy-rebuild-dispatch:
     name: deploy-rebuild-dispatch
     needs: ci
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     environment:
       name: production
       url: https://hooks.the40thieves.dev/healthz
@@ -173,7 +174,7 @@ jobs:
   deploy-preview-gateway:
     name: deploy-preview-gateway
     needs: ci
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     environment:
       name: production
     permissions:
@@ -219,7 +220,7 @@ jobs:
     name: deploy-mcp
     # After deploy: the KV documents this Worker serves are uploaded there, from the same build.
     needs: [ci, deploy]
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     environment:
       name: production
       url: https://the40thieves.dev/mcp/healthz
@@ -263,7 +264,7 @@ jobs:
   deploy-relay:
     name: deploy-relay
     needs: ci
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     environment:
       name: production
       url: https://relay.the40thieves.dev/v1/healthz

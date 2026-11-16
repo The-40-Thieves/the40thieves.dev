@@ -19,6 +19,9 @@ on:
       SANITY_READ_TOKEN:
         description: Viewer token for the Sanity dataset the40thieves (optional while it is public)
         required: false
+      PUBLIC_HYGIENE_PATTERNS:
+        description: Extended regexes, one per line, for values that must never be public
+        required: true
 
 permissions:
   contents: read
@@ -33,7 +36,7 @@ env:
 jobs:
   check:
     name: check
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -42,8 +45,11 @@ jobs:
       # reusable workflow never need a ref. GitHub changelog, 2026-07 (runner 2.336.0 or newer):
       # https://github.blog/changelog/2026-07-01-reference-same-repository-actions-with-self-repository-syntax/
       - uses: $/.github/actions/setup
+      # A pull request from a fork gets no secrets: the token step is skipped there and the loader
+      # reads the recorded org response (HUB_GITHUB_FIXTURE) instead of the GitHub API.
       - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: app-token
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -55,6 +61,7 @@ jobs:
         env:
           # `astro check` syncs the content layer, so the GitHub loader runs here too, as the App.
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          HUB_GITHUB_FIXTURE: ${{ steps.app-token.outputs.token == '' && format('{0}/apps/hub/tests/fixtures/github-org.json', github.workspace) || '' }}
           SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
       - run: pnpm lint
       - run: pnpm format:check
@@ -63,15 +70,18 @@ jobs:
 
   build:
     name: build
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: $/.github/actions/setup
       # The loader reads as the App (P2-03), downscoped to contents and metadata read.
+      # A pull request from a fork gets no secrets: the token step is skipped there and the loader
+      # reads the recorded org response (HUB_GITHUB_FIXTURE) instead of the GitHub API.
       - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: app-token
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -83,6 +93,7 @@ jobs:
         env:
           # The GitHub loader reads the org's public repositories over GraphQL (one query, 1 point).
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          HUB_GITHUB_FIXTURE: ${{ steps.app-token.outputs.token == '' && format('{0}/apps/hub/tests/fixtures/github-org.json', github.workspace) || '' }}
           SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -97,7 +108,7 @@ jobs:
   audit:
     name: audit
     needs: build
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -118,7 +129,7 @@ jobs:
 
   e2e:
     name: e2e
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -151,7 +162,7 @@ jobs:
   conformance:
     name: conformance
     needs: build
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     # Acceptance (P3-S5): under five minutes, install included. The suite itself takes about
     # ten seconds once the stack is up. deploy.yml needs the whole of this workflow, so on main a
     # red run here stops the deploy, like any other job in this file.
@@ -186,7 +197,7 @@ jobs:
 
   supply-chain:
     name: supply-chain
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -221,7 +232,7 @@ jobs:
 
   licenses:
     name: licenses
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -243,13 +254,52 @@ jobs:
       scan-args: --lockfile=./pnpm-lock.yaml
       fail-on-vuln: true
       upload-sarif: false
-      # The reusable workflow's own input, not a job key (a `uses:` job cannot set runs-on); it
-      # defaults to ubuntu-latest, and the repository has no GitHub-hosted minutes left.
-      runs-on: instabox-medium
+
+  # Values that must never appear in this public repository (an email, a name, private domains
+  # and addresses) are extended regexes in the PUBLIC_HYGIENE_PATTERNS secret, so the list is not
+  # public either. The tree and the new commits' author, committer and message are checked; only
+  # file names are printed. A fork's pull request is checked once it is merged.
+  public-hygiene:
+    name: public-hygiene
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check the tree and the new commits for private values
+        env:
+          PATTERNS: ${{ secrets.PUBLIC_HYGIENE_PATTERNS }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -z "$PATTERNS" ]; then echo "::error::PUBLIC_HYGIENE_PATTERNS is not set"; exit 1; fi
+          list="$RUNNER_TEMP/patterns"
+          printf '%s\n' "$PATTERNS" | tr -d '\r' | sed '/^[[:space:]]*$/d' > "$list"
+          failed=0
+          if files="$(grep -rIil --exclude-dir=.git --exclude-dir=node_modules -E -f "$list" .)"; then
+            echo "::error::Private values found in these files:"
+            printf '%s\n' "$files"
+            failed=1
+          fi
+          if [ -z "$BASE" ] || [ "$BASE" = 0000000000000000000000000000000000000000 ]; then
+            range="$HEAD"
+          else
+            range="$BASE..$HEAD"
+          fi
+          if git log --format='%an%n%ae%n%cn%n%ce%n%B' "$range" | grep -qiE -f "$list"; then
+            echo "::error::A new commit's author, committer or message holds a private value."
+            git log --format='%h' "$range" | while read -r sha; do
+              if git log -1 --format='%an%n%ae%n%cn%n%ce%n%B' "$sha" | grep -qiE -f "$list"; then echo "$sha"; fi
+            done
+            failed=1
+          fi
+          exit "$failed"
 
   test:
     name: test
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -261,7 +311,9 @@ jobs:
   # permission stops at the repositories it is installed on (both probes are side-effect free).
   github-app:
     name: github-app
-    runs-on: instabox-medium
+    # Needs secrets, which a pull request from a fork does not get.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -277,7 +329,9 @@ jobs:
   # infra/cloudflare/. A dashboard change fails here within one run.
   edge-config:
     name: edge-config
-    runs-on: instabox-medium
+    # Needs secrets, which a pull request from a fork does not get.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -290,7 +344,7 @@ jobs:
   lighthouse:
     name: lighthouse
     needs: build
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -322,8 +376,9 @@ jobs:
     # Only on pull requests (deploy.yml calls this workflow on push, so the event name already
     # excludes it). An `inputs.preview` guard used to sit here, but `inputs` is empty on a
     # pull_request run and `'' != false` evaluates false, which skipped the job every time.
-    if: github.event_name == 'pull_request' && github.actor != 'renovate[bot]'
-    runs-on: instabox-medium
+    # Only from branches in this repository: a fork's code never runs with the deploy token.
+    if: github.event_name == 'pull_request' && github.actor != 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
     environment: preview
     permissions:
       contents: read
@@ -390,7 +445,7 @@ jobs:
     # Any alert not triaged in .zap/rules.tsv fails the job; the
     # first scan reported Low and Informational alerts only, all triaged with reasons.
     if: needs.preview.result == 'success'
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -412,7 +467,7 @@ jobs:
   # the whole of this workflow, so on main a red run here stops the deploy.
   relay-zap:
     name: relay-zap
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       # Nothing leaves the runner but the image pull and the pinned actions.
@@ -509,7 +564,7 @@ jobs:
 
   semgrep:
     name: semgrep
-    runs-on: instabox-medium
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
