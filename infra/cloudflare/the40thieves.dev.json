@@ -191,6 +191,10 @@
       "script": "audio-forge-docs"
     },
     {
+      "pattern": "the40thieves.dev/codecalc/docs*",
+      "script": "codecalc-docs"
+    },
+    {
       "pattern": "the40thieves.dev/mcp*",
       "script": "mcp"
     }
