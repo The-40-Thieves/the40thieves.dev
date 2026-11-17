@@ -175,6 +175,66 @@
       "description": "codecalc docs moved to docs.the40thieves.dev: every other path under /codecalc/docs",
       "enabled": true,
       "expression": "(http.host eq \"the40thieves.dev\") and (http.request.uri.path eq \"/codecalc/docs\" or starts_with(http.request.uri.path, \"/codecalc/docs/\"))"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://docs.the40thieves.dev/alexandria-mcp\", wildcard_replace(http.request.uri.path, \"/alexandria-mcp/docs*/\", \"${1}\"))"
+          }
+        }
+      },
+      "description": "alexandria-mcp docs moved to docs.the40thieves.dev: pages, trailing slash dropped",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\") and starts_with(http.request.uri.path, \"/alexandria-mcp/docs/\") and ends_with(http.request.uri.path, \"/\")"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://docs.the40thieves.dev/alexandria-mcp\", wildcard_replace(http.request.uri.path, \"/alexandria-mcp/docs*\", \"${1}\"))"
+          }
+        }
+      },
+      "description": "alexandria-mcp docs moved to docs.the40thieves.dev: every other path under /alexandria-mcp/docs",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\") and (http.request.uri.path eq \"/alexandria-mcp/docs\" or starts_with(http.request.uri.path, \"/alexandria-mcp/docs/\"))"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://docs.the40thieves.dev/audio-forge\", wildcard_replace(http.request.uri.path, \"/audio-forge/docs*/\", \"${1}\"))"
+          }
+        }
+      },
+      "description": "audio-forge docs moved to docs.the40thieves.dev: pages, trailing slash dropped",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\") and starts_with(http.request.uri.path, \"/audio-forge/docs/\") and ends_with(http.request.uri.path, \"/\")"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://docs.the40thieves.dev/audio-forge\", wildcard_replace(http.request.uri.path, \"/audio-forge/docs*\", \"${1}\"))"
+          }
+        }
+      },
+      "description": "audio-forge docs moved to docs.the40thieves.dev: every other path under /audio-forge/docs",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\") and (http.request.uri.path eq \"/audio-forge/docs\" or starts_with(http.request.uri.path, \"/audio-forge/docs/\"))"
     }
   ],
   "worker_routes": [
