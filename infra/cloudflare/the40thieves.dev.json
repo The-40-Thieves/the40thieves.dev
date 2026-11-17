@@ -145,6 +145,36 @@
       "description": "www to the apex (PLAN P2-14): 301, path and query string kept",
       "enabled": true,
       "expression": "(http.host eq \"www.the40thieves.dev\")"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://docs.the40thieves.dev/codecalc\", wildcard_replace(http.request.uri.path, \"/codecalc/docs*/\", \"${1}\"))"
+          }
+        }
+      },
+      "description": "codecalc docs moved to docs.the40thieves.dev: pages, trailing slash dropped",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\") and starts_with(http.request.uri.path, \"/codecalc/docs/\") and ends_with(http.request.uri.path, \"/\")"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://docs.the40thieves.dev/codecalc\", wildcard_replace(http.request.uri.path, \"/codecalc/docs*\", \"${1}\"))"
+          }
+        }
+      },
+      "description": "codecalc docs moved to docs.the40thieves.dev: every other path under /codecalc/docs",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\") and (http.request.uri.path eq \"/codecalc/docs\" or starts_with(http.request.uri.path, \"/codecalc/docs/\"))"
     }
   ],
   "worker_routes": [

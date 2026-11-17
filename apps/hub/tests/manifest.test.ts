@@ -54,7 +54,7 @@ test('the manifest lists every repo, pages for the listed ones, and provenance e
   ]);
   const codecalc = manifest.projects.find((p) => p.slug === 'codecalc');
   expect(codecalc?.page).toBe('/codecalc/');
-  expect(codecalc?.docs).toBe('https://the40thieves.dev/codecalc/docs/');
+  expect(codecalc?.docs).toBe('https://docs.the40thieves.dev/codecalc');
   expect(codecalc?.source).toEqual({
     repo: 'The-40-Thieves/the40thieves.dev',
     path: 'apps/hub/content/hub/codecalc.json',
