@@ -102,6 +102,14 @@
       "comment": "P2-02: Cloudflare CA allowlist for Universal SSL (issue + issuewild)"
     },
     {
+      "type": "TXT",
+      "name": "the40thieves.dev",
+      "content": "\"google-site-verification=neIDFZzcVr9yLqh-XazWy599qz4C7HxV61w2tViwM8o\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": "Google Search Console domain verification"
+    },
+    {
       "type": "AAAA",
       "name": "www.the40thieves.dev",
       "content": "100::",
