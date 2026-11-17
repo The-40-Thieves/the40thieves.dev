@@ -243,14 +243,6 @@
       "script": "preview-gateway"
     },
     {
-      "pattern": "the40thieves.dev/alexandria-mcp/docs*",
-      "script": "alexandria-mcp-docs"
-    },
-    {
-      "pattern": "the40thieves.dev/audio-forge/docs*",
-      "script": "audio-forge-docs"
-    },
-    {
       "pattern": "the40thieves.dev/mcp*",
       "script": "mcp"
     }
