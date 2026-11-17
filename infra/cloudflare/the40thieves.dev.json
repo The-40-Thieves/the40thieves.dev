@@ -159,7 +159,7 @@
       },
       "description": "codecalc docs moved to docs.the40thieves.dev: pages, trailing slash dropped",
       "enabled": true,
-      "expression": "(http.host eq \"the40thieves.dev\") and starts_with(http.request.uri.path, \"/codecalc/docs\") and ends_with(http.request.uri.path, \"/\")"
+      "expression": "(http.host eq \"the40thieves.dev\") and starts_with(http.request.uri.path, \"/codecalc/docs/\") and ends_with(http.request.uri.path, \"/\")"
     },
     {
       "action": "redirect",
@@ -174,7 +174,7 @@
       },
       "description": "codecalc docs moved to docs.the40thieves.dev: every other path under /codecalc/docs",
       "enabled": true,
-      "expression": "(http.host eq \"the40thieves.dev\") and starts_with(http.request.uri.path, \"/codecalc/docs\")"
+      "expression": "(http.host eq \"the40thieves.dev\") and (http.request.uri.path eq \"/codecalc/docs\" or starts_with(http.request.uri.path, \"/codecalc/docs/\"))"
     }
   ],
   "worker_routes": [

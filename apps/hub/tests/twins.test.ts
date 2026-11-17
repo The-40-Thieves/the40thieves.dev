@@ -58,7 +58,7 @@ test('projectTwin renders the product page as Markdown: claim, installs, links, 
   );
   expect(md).toContain('### cursor\n\n```json\n{ "mcpServers"');
   expect(md).toContain('- Repository: https://github.com/The-40-Thieves/codecalc');
-  expect(md).toContain('- Documentation: https://the40thieves.dev/codecalc/docs/');
+  expect(md).toContain('- Documentation: https://docs.the40thieves.dev/codecalc');
   expect(md).toContain(
     '- Documentation source: https://github.com/The-40-Thieves/codecalc/tree/main/docs',
   );
