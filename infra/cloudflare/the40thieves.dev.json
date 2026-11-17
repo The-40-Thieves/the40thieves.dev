@@ -145,6 +145,36 @@
       "description": "www to the apex (PLAN P2-14): 301, path and query string kept",
       "enabled": true,
       "expression": "(http.host eq \"www.the40thieves.dev\")"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "wildcard_replace(http.request.uri.path, r\"/codecalc/docs*/\", r\"https://docs.the40thieves.dev/codecalc${1}\")"
+          }
+        }
+      },
+      "description": "codecalc docs moved to docs.the40thieves.dev: pages, trailing slash dropped",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\" and http.request.uri.path wildcard r\"/codecalc/docs*/\")"
+    },
+    {
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "preserve_query_string": true,
+          "status_code": 301,
+          "target_url": {
+            "expression": "wildcard_replace(http.request.uri.path, r\"/codecalc/docs*\", r\"https://docs.the40thieves.dev/codecalc${1}\")"
+          }
+        }
+      },
+      "description": "codecalc docs moved to docs.the40thieves.dev: every other path under /codecalc/docs",
+      "enabled": true,
+      "expression": "(http.host eq \"the40thieves.dev\" and http.request.uri.path wildcard r\"/codecalc/docs*\")"
     }
   ],
   "worker_routes": [
@@ -159,10 +189,6 @@
     {
       "pattern": "the40thieves.dev/audio-forge/docs*",
       "script": "audio-forge-docs"
-    },
-    {
-      "pattern": "the40thieves.dev/codecalc/docs*",
-      "script": "codecalc-docs"
     },
     {
       "pattern": "the40thieves.dev/mcp*",
