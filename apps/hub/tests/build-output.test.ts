@@ -218,28 +218,16 @@ test('build ships the org banner and one card per listed project, all self-conta
   expect(readFileSync(`${dist}/_headers`, 'utf8')).toContain('/og/*\n  Cache-Control: no-cache');
 });
 
-test('a project with a docs site links to it and the manifest carries the url (P2-07)', () => {
-  const page = readFileSync(`${dist}/alexandria-mcp/index.html`, 'utf8');
-  expect(page).toContain('href="/alexandria-mcp/docs/"');
-  expect(page).toContain('https://github.com/The-40-Thieves/alexandria-mcp/tree/main/docs');
+test('a project with docs published elsewhere links there, not to a hub docs path (P2-07)', () => {
   const manifest = JSON.parse(readFileSync(`${dist}/manifest.json`, 'utf8')) as {
     projects: { slug: string; docs: string | null }[];
   };
-  const docsOf = (slug: string) => manifest.projects.find((p) => p.slug === slug)?.docs;
-  for (const slug of ['alexandria-mcp', 'audio-forge']) {
-    expect(docsOf(slug), slug).toBe(`https://the40thieves.dev/${slug}/docs/`);
-    expect(readFileSync(`${dist}/${slug}/index.html`, 'utf8')).toContain(`href="/${slug}/docs/"`);
+  for (const slug of ['codecalc', 'alexandria-mcp', 'audio-forge']) {
+    const docs = `https://docs.the40thieves.dev/${slug}`;
+    const page = readFileSync(`${dist}/${slug}/index.html`, 'utf8');
+    expect(page, slug).toContain(`href="${docs}"`);
+    expect(page, slug).not.toContain(`href="/${slug}/docs/"`);
+    expect(page, slug).toContain(`https://github.com/The-40-Thieves/${slug}/tree/main/docs`);
+    expect(manifest.projects.find((p) => p.slug === slug)?.docs, slug).toBe(docs);
   }
-});
-
-test('a project with docs published elsewhere links there, not to a hub docs path', () => {
-  const docs = 'https://docs.the40thieves.dev/codecalc';
-  const page = readFileSync(`${dist}/codecalc/index.html`, 'utf8');
-  expect(page).toContain(`href="${docs}"`);
-  expect(page).not.toContain('href="/codecalc/docs/"');
-  expect(page).toContain('https://github.com/The-40-Thieves/codecalc/tree/main/docs');
-  const manifest = JSON.parse(readFileSync(`${dist}/manifest.json`, 'utf8')) as {
-    projects: { slug: string; docs: string | null }[];
-  };
-  expect(manifest.projects.find((p) => p.slug === 'codecalc')?.docs).toBe(docs);
 });
