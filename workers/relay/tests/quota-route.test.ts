@@ -63,6 +63,33 @@ async function expectError(response: Response, code: keyof typeof ERROR_CODES): 
   expectPolicyHeaders(response);
 }
 
+test('paused: every quota source answers 503 paused before a key, a budget or an upstream', async () => {
+  const metrics: QuotaMetric[] = [];
+  let storeCalls = 0;
+  const store = new Proxy(memoryQuotaStore(), {
+    get(target, property, receiver) {
+      storeCalls += 1;
+      return Reflect.get(target, property, receiver) as unknown;
+    },
+  });
+  const h = harness({
+    paused: () => Promise.resolve(true),
+    quota: { sources: QUOTA_SOURCES, keys: KEYS, store, metric: (point) => metrics.push(point) },
+  });
+  for (const source of KEYS.keys()) {
+    const response = await h.send(quotaRequest(source, { session: await session() }));
+    await expectError(response, 'paused');
+    expect(response.headers.get('retry-after')).toBe('300');
+  }
+  expect(h.calls).toEqual([]);
+  expect(storeCalls).toBe(0);
+  expect(metrics).toEqual([]);
+  expect(h.limiter.counts.size).toBe(0);
+  expect(h.logs.map((entry) => [entry.route, entry.outcome, entry.status])).toEqual(
+    [...KEYS.keys()].map(() => ['quota', 'paused', 503]),
+  );
+});
+
 function sentHeaders(init: RequestInit | undefined): Headers {
   return new Headers(init?.headers);
 }

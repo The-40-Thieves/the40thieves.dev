@@ -3,7 +3,8 @@
  * `/alexandria/try/` page together. Both Workers import this file, so they read the same key by
  * the same rule.
  *
- * Pause: write any value but an "off" word to `relay-paused`. Resume: delete the key.
+ * Pause: write a value to `relay-paused` that is not empty and not an "off" word (`0`, `false`,
+ * `off`, `no`). Resume: delete the key.
  * A read is cached for 30 seconds where it is made (the KV minimum), so a write takes effect
  * everywhere within about that long.
  */
@@ -38,13 +39,26 @@ export function createPauseCheck(
   onError: (error: unknown) => void = () => undefined,
 ): () => Promise<boolean> {
   let last = false;
+  // Reads overlap: requests share one check. `last` only moves forward, so a slow older read
+  // that lands after a newer one cannot put back the value the newer one replaced.
+  let started = 0;
+  let committed = 0;
   return async () => {
     if (store === undefined) return false;
+    started += 1;
+    const read = started;
     try {
-      last = isPausedValue(await store.get(PAUSE_KEY, { cacheTtl: PAUSE_CACHE_TTL_SECONDS }));
+      const value = isPausedValue(
+        await store.get(PAUSE_KEY, { cacheTtl: PAUSE_CACHE_TTL_SECONDS }),
+      );
+      if (read > committed) {
+        committed = read;
+        last = value;
+      }
+      return value;
     } catch (error) {
       onError(error);
+      return last;
     }
-    return last;
   };
 }

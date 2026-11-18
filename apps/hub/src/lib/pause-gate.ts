@@ -33,7 +33,7 @@ export const PAUSED_HTML = `<!doctype html>
 <body>
 <main>
 <h1>Try alexandria is paused</h1>
-<p>The in-browser search is switched off for now. Nothing is wrong with your keys or your browser, and no key you entered was stored.</p>
+<p>The in-browser search is switched off for now. Nothing is wrong with your keys or your browser. This page does not ask for, read or send any key.</p>
 <p>Please come back later. Until then:</p>
 <ul>
 <li><a href="/alexandria/sources/">The routing matrix</a> lists every source and how it is reached.</li>

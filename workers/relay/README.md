@@ -235,11 +235,11 @@ What the first deploy needs, both in place since 2026-11-10:
 One key in the `FLAGS` KV namespace pauses the relay and the `/alexandria/try/` page together
 (P4-S5). The rule lives in `security/pause-flag.ts`, which both Workers import.
 
-| To     | Do                                                                         |
-| ------ | -------------------------------------------------------------------------- |
-| Pause  | Write any value to the key `relay-paused` (a short reason is a good value) |
-| Resume | Delete the key `relay-paused`                                              |
-| Check  | `GET https://relay.the40thieves.dev/v1/healthz` and read `paused`          |
+| To     | Do                                                                                          |
+| ------ | ------------------------------------------------------------------------------------------- |
+| Pause  | Write a short reason to the key `relay-paused` (not empty, not `0`, `false`, `off` or `no`) |
+| Resume | Delete the key `relay-paused`                                                               |
+| Check  | `GET https://relay.the40thieves.dev/v1/healthz` and read `paused`                           |
 
 ```sh
 pnpm --filter @the40thieves/relay exec wrangler kv key put relay-paused "abuse, see runbook" --binding FLAGS --remote

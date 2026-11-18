@@ -76,7 +76,8 @@ test('a failed read keeps the last value seen and reports the error', async () =
   expect(errors).toHaveLength(2);
 });
 
-test('paused: fetch, quota and session answer 503 paused and nothing goes upstream', async () => {
+// The quota route's paused answer is covered in quota-route.test.ts, which has its harness.
+test('paused: fetch and session answer 503 paused and nothing goes upstream', async () => {
   let turnstileCalls = 0;
   const h = harness({
     paused,
@@ -128,4 +129,27 @@ test('not paused: healthz reports paused false and a fetch is relayed', async ()
   const relayed = await h.send(fetchRequest({ session: await session() }));
   expect(relayed.status).toBe(200);
   expect(h.calls).toHaveLength(1);
+});
+
+test('a slow older read cannot overwrite the value a newer read committed', async () => {
+  const pending: ((value: string | null) => void)[] = [];
+  let fail = false;
+  const check = createPauseCheck({
+    get: () =>
+      fail
+        ? Promise.reject(new Error('kv down'))
+        : new Promise((resolve) => {
+            pending.push(resolve);
+          }),
+  });
+  const older = check();
+  const newer = check();
+  // The newer read lands first and says paused; the older one then lands saying not paused.
+  pending[1]?.('1');
+  expect(await newer).toBe(true);
+  pending[0]?.(null);
+  expect(await older).toBe(false);
+  // An outage now falls back to the newest committed value, which is paused.
+  fail = true;
+  expect(await check()).toBe(true);
 });

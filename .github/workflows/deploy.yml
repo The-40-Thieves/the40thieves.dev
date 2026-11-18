@@ -409,6 +409,9 @@ jobs:
             body="$(cat "$out" 2>/dev/null || true)"
             if [ "$status" = "$want_status" ] && [ "$body" = "$want_body" ]; then
               echo "ok: $name answered $status $body"
+            elif [ "$status" = '503' ] && [ "$body" = '{"error":"paused"}' ]; then
+              # The flag was set after the healthz check above: the same skip, one probe late.
+              echo "::warning::$name: the relay was paused mid-probe, so this refusal was not checked."
             else
               echo "::error::$name: expected $want_status $want_body, got $status $body"
               failed=1
