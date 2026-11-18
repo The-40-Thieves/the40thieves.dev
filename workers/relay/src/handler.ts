@@ -197,11 +197,20 @@ async function readCapped(request: Request, cap: number): Promise<Uint8Array | n
 
 const encoder = new TextEncoder();
 
-/** The spellings of an operator key an upstream could echo: as sent, and percent-encoded. */
+/**
+ * The spellings of an operator key an upstream could echo: as sent, percent-encoded, and as the
+ * query string carries it. The last is how a key in the URL actually leaves the relay
+ * (`searchParams.set` writes a space as `+` and escapes more characters than encodeURIComponent).
+ * Each encoded spelling is also tried with lower-case hex.
+ */
 function keyNeedles(key: string): Uint8Array[] {
-  const encoded = encodeURIComponent(key);
-  const lowerHex = encoded.replace(/%[0-9A-F]{2}/g, (escape) => escape.toLowerCase());
-  return [...new Set([key, encoded, lowerHex])].map((text) => encoder.encode(text));
+  const lowerHex = (text: string): string =>
+    text.replace(/%[0-9A-F]{2}/g, (escape) => escape.toLowerCase());
+  const percent = encodeURIComponent(key);
+  const query = new URLSearchParams({ k: key }).toString().slice(2);
+  return [...new Set([key, percent, lowerHex(percent), query, lowerHex(query)])].map((text) =>
+    encoder.encode(text),
+  );
 }
 
 function includesBytes(haystack: Uint8Array, needle: Uint8Array): boolean {

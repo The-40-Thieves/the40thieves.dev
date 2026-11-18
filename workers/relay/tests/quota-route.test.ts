@@ -364,13 +364,29 @@ test.each([
   expect(h.metrics.at(-1)).toMatchObject({ source: 'guardian', outcome: 'key_reflected' });
 });
 
-test('a percent-encoded echo of the operator key is refused too', async () => {
-  const keys = new Map([['guardian', 'gu/operator+key=']]);
-  const h = quotaHarness(keys);
-  h.answer.current = () =>
-    new Response('{"url":"?api-key=gu%2foperator%2bkey%3d"}', { status: 400 });
+// Made-up keys with characters that change under encoding. The echoes are built here, not
+// written out, so the file holds no string shaped like a credential in a URL.
+test.each([
+  ['percent-encoded', 'made/up+value=', (key: string) => encodeURIComponent(key)],
+  [
+    'percent-encoded in lower case',
+    'made/up+value=',
+    (key: string) => encodeURIComponent(key).toLowerCase(),
+  ],
+  [
+    'as the query string carries it',
+    "made up (value)!~'*",
+    (key: string) => new URLSearchParams({ k: key }).toString().slice(2),
+  ],
+])('an echo of the operator key %s is refused too', async (_how, key, spell) => {
+  const echoed = spell(key);
+  expect(echoed).not.toBe(key);
+  const h = quotaHarness(new Map([['guardian', key]]));
+  h.answer.current = () => new Response(JSON.stringify({ sent: echoed }), { status: 400 });
   const response = await h.send(quotaRequest('guardian', { session: await session() }));
   expect(await response.text()).toBe('{"error":"upstream_failed"}');
+  // The key did go upstream in the query string, in the spelling the last case echoes.
+  expect(h.calls.at(-1)?.url).toContain(new URLSearchParams({ k: key }).toString().slice(2));
 });
 
 test('an ordinary answer is passed on whole, with its status and the remaining budget', async () => {
