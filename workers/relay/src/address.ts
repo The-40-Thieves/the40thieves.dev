@@ -59,6 +59,7 @@ function isPublicV4([a, b, c]: V4): boolean {
   if (a === 172 && b >= 16 && b <= 31) return false;
   if (a === 192 && b === 168) return false;
   if (a === 192 && b === 0 && (c === 0 || c === 2)) return false;
+  if (a === 192 && b === 88 && c === 99) return false; // 6to4 relay anycast (deprecated)
   if (a === 198 && (b === 18 || b === 19)) return false;
   if (a === 198 && b === 51 && c === 100) return false;
   if (a === 203 && b === 0 && c === 113) return false;
@@ -98,9 +99,41 @@ function isPublicV6(g: readonly number[]): boolean {
   if ((g0 & 0xffc0) === 0xfe80) return false; // fe80::/10 link local
   if ((g0 & 0xffc0) === 0xfec0) return false; // fec0::/10 site local (deprecated)
   if ((g0 & 0xff00) === 0xff00) return false; // ff00::/8 multicast
+  // Everything else must be global unicast, 2000::/3. That one rule refuses the unassigned and
+  // special-use space outside it without a list to keep current: 100::/64 discard, 100:0:0:1::/64
+  // dummy, 5f00::/16 SRv6 SIDs, and whatever is assigned there next.
+  if ((g0 & 0xe000) !== 0x2000) return false;
+  // Inside 2000::/3, the IANA special-purpose registry's blocks.
+  if (g0 === 0x2001 && g1 < 0x0200) return false; // 2001::/23 protocol assignments (Teredo, benchmarking, ORCHID)
   if (g0 === 0x2001 && g1 === 0x0db8) return false; // 2001:db8::/32 documentation
-  if (g0 === 0x0100 && g1 === 0 && g2 === 0 && g3 === 0) return false; // 100::/64 discard
+  if (g0 === 0x3fff && g1 < 0x1000) return false; // 3fff::/20 documentation
   return true;
+}
+
+/**
+ * The network a client address counts as, for rate limits and visitor budgets. An IPv4 address
+ * is itself. An IPv6 address is its /64: one subscriber usually holds at least that much and can
+ * move between its addresses at no cost, so counting per address would count nothing. An
+ * IPv4-mapped address is the IPv4 address. Text that is not an address is returned unchanged.
+ */
+export function clientNetwork(ip: string): string {
+  if (!ip.includes(':')) return ip;
+  const groups = parseV6(ip);
+  if (groups === null) return ip;
+  const [g0, g1, g2, g3, g4, g5, g6, g7] = groups as [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ];
+  if (g0 === 0 && g1 === 0 && g2 === 0 && g3 === 0 && g4 === 0 && g5 === 0xffff) {
+    return v4From(g6, g7).join('.');
+  }
+  return `${[g0, g1, g2, g3].map((group) => group.toString(16)).join(':')}::/64`;
 }
 
 /** True only when `ip` parses as exactly one IPv4 or IPv6 address that is not private, reserved or special-use. */

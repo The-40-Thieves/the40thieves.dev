@@ -95,13 +95,21 @@ Check order, first failure answers:
 9. Budget: one request of the source's site budget and of this visitor's budget for the UTC day is
    reserved, or `429 quota_reached` with `Retry-After` set to the seconds until the next UTC
    midnight. A refused request spends nothing.
-10. Forward, as for `/v1/fetch`.
+10. Forward, as for `/v1/fetch`, except that the answer is held, not streamed: the whole body
+    (within the 2 MB cap) and the kept headers are searched for the operator key, as sent and
+    percent-encoded, before a byte goes to the visitor. An answer that carries it is replaced
+    with `502 upstream_failed` and logged with the outcome `key_reflected`. A body over the cap
+    or past the deadline is a `502` or `504` here, since no status has been sent yet.
 
 Budgets: the site cap is 80% of the upstream's declared daily cap (100, 360 and 3,600 requests);
 the visitor caps are 10, 30 and 100. Both reset at UTC midnight. The counters live in one
 SQLite-backed Durable Object per source (`QuotaCounter`, `src/quota-counter.ts`), so a cap is exact.
-A visitor is a keyed HMAC of the day and the client IP, truncated to 12 bytes: no IP is stored, and
-the key changes every day. A reserved request counts even if the upstream then fails.
+A visitor is a keyed HMAC of the day and the client's network, truncated to 12 bytes: no address is
+stored, and the key changes every day. A reserved request counts even if the upstream then fails.
+
+"Per IP" in this file means per client network (`clientNetwork`, `src/address.ts`): an IPv4 address
+is itself, and an IPv6 address counts as its /64, so moving between the addresses of one /64 does
+not add a rate limit or a visitor budget.
 
 ### `GET | HEAD /v1/healthz`
 
@@ -286,9 +294,11 @@ The deploy job skips its live refusal probes while the relay is paused and says 
    gate in `tests/`.
 4. A visitor's API key passes through the relay in request headers. It is never stored and never
    logged, but the relay does see it in transit.
-5. Quota budgets are counted per IP, so visitors behind one address (an office, a carrier NAT) share
-   one visitor budget, and one person with many addresses gets many. The site cap still bounds the
-   total. A reserved request counts even if the upstream then fails or times out.
+5. Quota budgets are counted per client network (an IPv4 address or an IPv6 /64), so visitors
+   behind one address (an office, a carrier NAT) share one visitor budget, and one person with
+   several networks, or an IPv6 allocation larger than a /64, gets several. A session is not bound
+   to the network it was minted on. The site cap still bounds the total. A reserved request counts
+   even if the upstream then fails or times out.
 6. The guardian key travels in the upstream URL's query string, as the Guardian requires. The relay
    never logs that URL, the platform invocation log and tracing are off, and redirects are refused,
    so the key goes only to `content.guardianapis.com`.
