@@ -3,7 +3,17 @@ import { expect, test } from 'vitest';
 import { ERROR_CODES, type QuotaDeps, type QuotaMetric } from '../src/handler.ts';
 import { memoryQuotaStore, QUOTA_SOURCES } from '../src/quota.ts';
 import { MONTHLY_BUDGET_USD, monthlyCost } from './cost-model.ts';
-import { BASE, expectPolicyHeaders, fetchRequest, harness, NOW, session, SITE } from './fakes.ts';
+import { RESPONSE_CAP_BYTES } from '../src/forward.ts';
+import {
+  BASE,
+  chunkedBody,
+  expectPolicyHeaders,
+  fetchRequest,
+  harness,
+  NOW,
+  session,
+  SITE,
+} from './fakes.ts';
 
 const KEYS = new Map([
   ['courtlistener', 'cl-operator-key'],
@@ -28,7 +38,14 @@ function quotaHarness(keys: ReadonlyMap<string, string> = KEYS) {
       metrics.push(point);
     },
   };
-  return { ...harness({ quota }), metrics, store };
+  // A test sets `answer.current` to stand in for the upstream; unset, it is the usual small JSON.
+  const answer: { current?: () => Response } = {};
+  const upstream = (): Promise<Response> =>
+    Promise.resolve(
+      answer.current?.() ??
+        new Response('{"models":[]}', { headers: { 'content-type': 'application/json' } }),
+    );
+  return { ...harness({ quota, answer: upstream }), metrics, store, answer };
 }
 
 function quotaRequest(
@@ -296,3 +313,107 @@ test('a simulated day stays inside every cap and the recorded budget', async () 
   expect(requests).toBe(15_000);
   expect(cost).toBeLessThanOrEqual(MONTHLY_BUDGET_USD);
 }, 120_000);
+
+test('one IPv6 /64 is one visitor: rotating addresses inside it does not multiply the budget', async () => {
+  const h = quotaHarness();
+  const cap = QUOTA_SOURCES.get('courtlistener')?.visitorCap ?? 0;
+  expect(cap).toBeGreaterThan(0);
+  const token = await session();
+  for (let i = 0; i < cap; i += 1) {
+    const ip = `2001:db8:1:2::${(i + 1).toString(16)}`;
+    const response = await h.send(quotaRequest('courtlistener', { session: token, ip }));
+    expect(response.status, ip).toBe(200);
+  }
+  await expectError(
+    await h.send(quotaRequest('courtlistener', { session: token, ip: '2001:db8:1:2:ffff::1' })),
+    'quota_reached',
+  );
+  // Another /64 is another visitor.
+  const other = await h.send(
+    quotaRequest('courtlistener', { session: token, ip: '2001:db8:1:3::1' }),
+  );
+  expect(other.status).toBe(200);
+});
+
+test.each([
+  [
+    'in a JSON error body',
+    { body: '{"requested_url":"https://x.test/search?api-key=gu-operator-key"}' },
+  ],
+  ['in an ETag', { body: '{}', headers: { etag: '"gu-operator-key"' } }],
+  [
+    'in a rate-limit header',
+    { body: '{}', headers: { 'x-ratelimit-note': 'key gu-operator-key' } },
+  ],
+])('an answer that carries the operator key %s is refused whole', async (_where, upstream) => {
+  const h = quotaHarness();
+  h.answer.current = () =>
+    new Response(upstream.body, {
+      status: 400,
+      headers: {
+        'content-type': 'application/json',
+        ...('headers' in upstream ? upstream.headers : {}),
+      },
+    });
+  const response = await h.send(quotaRequest('guardian', { session: await session() }));
+  expect(response.status).toBe(ERROR_CODES.upstream_failed);
+  const text = await response.text();
+  expect(text).toBe('{"error":"upstream_failed"}');
+  expect([...response.headers].flat().join(' ')).not.toContain('gu-operator-key');
+  expect(h.logs.at(-1)).toMatchObject({ route: 'quota', outcome: 'key_reflected', status: 502 });
+  expect(h.metrics.at(-1)).toMatchObject({ source: 'guardian', outcome: 'key_reflected' });
+});
+
+// Made-up keys with characters that change under encoding. The echoes are built here, not
+// written out, so the file holds no string shaped like a credential in a URL.
+test.each([
+  ['percent-encoded', 'made/up+value=', (key: string) => encodeURIComponent(key)],
+  [
+    'percent-encoded in lower case',
+    'made/up+value=',
+    (key: string) => encodeURIComponent(key).toLowerCase(),
+  ],
+  [
+    'as the query string carries it',
+    "made up (value)!~'*",
+    (key: string) => new URLSearchParams({ k: key }).toString().slice(2),
+  ],
+])('an echo of the operator key %s is refused too', async (_how, key, spell) => {
+  const echoed = spell(key);
+  expect(echoed).not.toBe(key);
+  const h = quotaHarness(new Map([['guardian', key]]));
+  h.answer.current = () => new Response(JSON.stringify({ sent: echoed }), { status: 400 });
+  const response = await h.send(quotaRequest('guardian', { session: await session() }));
+  expect(await response.text()).toBe('{"error":"upstream_failed"}');
+  // The key did go upstream in the query string, in the spelling the last case echoes.
+  expect(h.calls.at(-1)?.url).toContain(new URLSearchParams({ k: key }).toString().slice(2));
+});
+
+test('an ordinary answer is passed on whole, with its status and the remaining budget', async () => {
+  const h = quotaHarness();
+  h.answer.current = () =>
+    new Response('{"results":[1,2,3]}', {
+      status: 200,
+      headers: { 'content-type': 'application/json', etag: '"abc"' },
+    });
+  const response = await h.send(quotaRequest('guardian', { session: await session() }));
+  expect(response.status).toBe(200);
+  expect(await response.text()).toBe('{"results":[1,2,3]}');
+  expect(response.headers.get('etag')).toBe('"abc"');
+  expect(response.headers.get('x-quota-remaining')).not.toBeNull();
+  expect(h.logs.at(-1)).toMatchObject({
+    route: 'quota',
+    outcome: 'complete',
+    status: 200,
+    bytes: 19,
+  });
+});
+
+test('a quota answer over the cap is a 502, not a cut stream', async () => {
+  const h = quotaHarness();
+  h.answer.current = () => new Response(chunkedBody(RESPONSE_CAP_BYTES + 1), { status: 200 });
+  await expectError(
+    await h.send(quotaRequest('guardian', { session: await session() })),
+    'upstream_too_large',
+  );
+});

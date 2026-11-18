@@ -1,0 +1,7 @@
+# One finding per line: commit:file:rule:line. Only for strings that are not secrets and are
+# already in a commit, where the allowlist in .gitleaks.toml would be too wide.
+#
+# A made-up operator key in a relay test ("?api-key=..." in a mocked upstream body). The test no
+# longer writes it out. The commit exists only on the branch of pull request 10; once that is
+# squash-merged the commit is gone and this line can be deleted.
+4b3c66e1c60ad5cbbfa81666b26e04d2c8f6f7b7:workers/relay/tests/quota-route.test.ts:generic-api-key:358

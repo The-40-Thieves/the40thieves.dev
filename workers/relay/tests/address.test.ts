@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { isPublicAddress } from '../src/address.ts';
+import { clientNetwork, isPublicAddress } from '../src/address.ts';
 
 test.each([
   ['172.15.255.255', true],
@@ -26,6 +26,8 @@ test.each([
   ['198.19.255.255', false],
   ['198.20.0.0', true],
   ['198.51.100.7', false],
+  ['192.88.99.1', false],
+  ['192.88.98.1', true],
   ['203.0.113.7', false],
   ['223.255.255.255', true],
   ['224.0.0.1', false],
@@ -48,7 +50,19 @@ test.each([
   ['2001:db8::1', false],
   ['2001:db9::1', true],
   ['100::1', false],
-  ['100:0:0:1::1', true],
+  // Special-use space the filter used to pass (IANA IPv6 special-purpose registry).
+  ['100:0:0:1::1', false],
+  ['2001:2::1', false],
+  ['2001::1', false],
+  ['2001:1ff:ffff::1', false],
+  ['2001:200::1', true],
+  ['3fff::1', false],
+  ['3fff:fff:ffff::1', false],
+  ['3fff:1000::1', true],
+  ['5f00::1', false],
+  ['4000::1', false],
+  ['1fff::1', false],
+  ['2a00:1450:4001::1', true],
   ['::ffff:10.0.0.1', false],
   ['::ffff:a00:1', false],
   ['::ffff:8.8.8.8', true],
@@ -84,4 +98,17 @@ test.each([
   '1.1.1.1:80',
 ])('does not parse as one address: %j is not public', (text) => {
   expect(isPublicAddress(text)).toBe(false);
+});
+
+test.each([
+  ['203.0.113.7', '203.0.113.7'],
+  ['2001:db8:1:2:3:4:5:6', '2001:db8:1:2::/64'],
+  ['2001:db8:1:2::9', '2001:db8:1:2::/64'],
+  ['2001:DB8:1:2:ffff:ffff:ffff:ffff', '2001:db8:1:2::/64'],
+  ['2001:db8:1:3::9', '2001:db8:1:3::/64'],
+  ['::ffff:203.0.113.7', '203.0.113.7'],
+  ['not an address', 'not an address'],
+  ['1::2::3', '1::2::3'],
+])('clientNetwork(%s) is %s', (ip, network) => {
+  expect(clientNetwork(ip)).toBe(network);
 });

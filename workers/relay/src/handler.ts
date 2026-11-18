@@ -1,6 +1,7 @@
 import { PAUSE_RETRY_AFTER_SECONDS } from '../../../security/pause-flag.ts';
 
-import { forward, type ForwardError } from './forward.ts';
+import { forward, type ForwardError, type ForwardOutcome } from './forward.ts';
+import { clientNetwork } from './address.ts';
 import { clientHeaders } from './headers.ts';
 import type { LogEntry } from './log.ts';
 import type { Resolver } from './resolve.ts';
@@ -42,7 +43,7 @@ export type ErrorCode = keyof typeof ERROR_CODES;
 export const REQUEST_CAP_BYTES = 64 * 1024;
 /** Largest `/v1/session` body. */
 const SESSION_BODY_CAP_BYTES = 4096;
-/** Mirrors `ratelimits[].simple.period` in wrangler.jsonc (60 fetches, 5 sessions per IP). */
+/** Mirrors `ratelimits[].simple.period` in wrangler.jsonc (60 fetches, 5 sessions per network). */
 const RATE_LIMIT_PERIOD_SECONDS = 60;
 const PAUSED_HEADERS = { 'retry-after': String(PAUSE_RETRY_AFTER_SECONDS) };
 
@@ -56,9 +57,13 @@ export interface Limiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
-/** The client IP Cloudflare attaches, or one shared "unknown" budget when it is absent. */
+/**
+ * The client's network (its IPv4 address, or its IPv6 /64) from the address Cloudflare attaches,
+ * or one shared "unknown" budget when it is absent. Rate limits and visitor budgets count by it.
+ */
 export function clientKey(request: Request): string {
-  return request.headers.get('cf-connecting-ip') ?? 'unknown';
+  const ip = request.headers.get('cf-connecting-ip');
+  return ip === null ? 'unknown' : clientNetwork(ip);
 }
 
 /** True when this request is over the budget for its key. */
@@ -190,6 +195,80 @@ async function readCapped(request: Request, cap: number): Promise<Uint8Array | n
   return body;
 }
 
+const encoder = new TextEncoder();
+
+/**
+ * The spellings of an operator key an upstream could echo: as sent, percent-encoded, and as the
+ * query string carries it. The last is how a key in the URL actually leaves the relay
+ * (`searchParams.set` writes a space as `+` and escapes more characters than encodeURIComponent).
+ * Each encoded spelling is also tried with lower-case hex.
+ */
+function keyNeedles(key: string): Uint8Array[] {
+  const lowerHex = (text: string): string =>
+    text.replace(/%[0-9A-F]{2}/g, (escape) => escape.toLowerCase());
+  const percent = encodeURIComponent(key);
+  const query = new URLSearchParams({ k: key }).toString().slice(2);
+  return [...new Set([key, percent, lowerHex(percent), query, lowerHex(query)])].map((text) =>
+    encoder.encode(text),
+  );
+}
+
+function includesBytes(haystack: Uint8Array, needle: Uint8Array): boolean {
+  if (needle.byteLength === 0) return false;
+  const first = needle[0];
+  const last = haystack.byteLength - needle.byteLength;
+  for (let start = haystack.indexOf(first as number); start !== -1 && start <= last;) {
+    let matched = 1;
+    while (matched < needle.byteLength && haystack[start + matched] === needle[matched]) {
+      matched += 1;
+    }
+    if (matched === needle.byteLength) return true;
+    start = haystack.indexOf(first as number, start + 1);
+  }
+  return false;
+}
+
+/** True when the operator key appears in a header value or in the body of an upstream answer. */
+function carriesKey(headers: Headers, body: Uint8Array, key: string): boolean {
+  const needles = keyNeedles(key);
+  for (const [, value] of headers) {
+    const bytes = encoder.encode(value);
+    if (needles.some((needle) => includesBytes(bytes, needle))) return true;
+  }
+  return needles.some((needle) => includesBytes(body, needle));
+}
+
+/** A stream read to its end; null when it errors, which is how forward() reports a cap or deadline. */
+async function readAll(stream: ReadableStream<Uint8Array> | null): Promise<Uint8Array | null> {
+  if (stream === null) return new Uint8Array(0);
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      total += value.byteLength;
+    }
+  } catch {
+    return null;
+  }
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+const STREAM_ERRORS: Record<Exclude<ForwardOutcome, 'complete'>, ForwardError> = {
+  too_large: 'upstream_too_large',
+  timeout: 'upstream_timeout',
+  failed: 'upstream_failed',
+};
+
 function bodyStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     start(controller) {
@@ -283,7 +362,6 @@ export function createHandler(
    */
   async function quota(
     request: Request,
-    ctx: WaitUntil,
     started: number,
     corsMatched: boolean,
     name: string,
@@ -367,15 +445,39 @@ export function createHandler(
     );
     if (!result.ok) return refuse(result.error satisfies ForwardError, host);
 
-    const { status } = result.response;
-    result.response.headers.set('x-quota-remaining', String(budget.remaining));
-    ctx.waitUntil(
-      result.done.then(({ bytes, outcome }) => {
-        deps.log({ route: 'quota', outcome, status, host, bytes, ms: deps.now() - started });
-        metric(outcome, status);
-      }),
-    );
-    return result.response;
+    // Unlike /v1/fetch, the answer is held (forward() caps it at RESPONSE_CAP_BYTES) until it is
+    // known not to carry the operator key: an upstream that echoes its request URL or headers,
+    // in an error body say, would otherwise hand the key to the visitor.
+    const { status, headers: answerHeaders } = result.response;
+    const answer = await readAll(result.response.body as ReadableStream<Uint8Array> | null);
+    const { outcome } = await result.done;
+    if (answer === null || outcome !== 'complete') {
+      return refuse(STREAM_ERRORS[outcome === 'complete' ? 'failed' : outcome], host);
+    }
+    if (carriesKey(answerHeaders, answer, operatorKey)) {
+      const refused = ERROR_CODES.upstream_failed;
+      deps.log({
+        route: 'quota',
+        outcome: 'key_reflected',
+        status: refused,
+        host,
+        ms: deps.now() - started,
+      });
+      metric('key_reflected', refused);
+      return errorResponse('upstream_failed');
+    }
+    answerHeaders.set('x-quota-remaining', String(budget.remaining));
+    deps.log({
+      route: 'quota',
+      outcome,
+      status,
+      host,
+      bytes: answer.byteLength,
+      ms: deps.now() - started,
+    });
+    metric(outcome, status);
+    const noBody = request.method === 'HEAD' || status === 204 || status === 205 || status === 304;
+    return new Response(noBody ? null : answer, { status, headers: answerHeaders });
   }
 
   async function session(request: Request, started: number, corsMatched: boolean) {
@@ -432,13 +534,7 @@ export function createHandler(
       if (request.method === 'OPTIONS' && corsMatched) {
         return preflight(request, deps.origin, 'GET, HEAD');
       }
-      response = await quota(
-        request,
-        ctx,
-        started,
-        corsMatched,
-        pathname.slice(QUOTA_PREFIX.length),
-      );
+      response = await quota(request, started, corsMatched, pathname.slice(QUOTA_PREFIX.length));
     } else if (pathname === '/v1/healthz') {
       if (request.method === 'GET' || request.method === 'HEAD') {
         const quotaNames = [...(deps.quota?.keys.keys() ?? [])].sort();
