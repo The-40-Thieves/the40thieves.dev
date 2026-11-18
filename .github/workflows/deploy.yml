@@ -386,6 +386,12 @@ jobs:
         run: |
           relay='https://relay.the40thieves.dev'
           site='https://the40thieves.dev'
+          # While the kill switch is on (P4-S5) the last two probes answer 503 paused by design,
+          # so a deploy made during a pause skips them and says so.
+          if [ "$(curl -fsS --max-time 10 "$relay/v1/healthz" | jq -r '.paused')" = 'true' ]; then
+            echo '::warning::The relay is paused (the relay-paused flag is set), so its refusals were not probed. Re-run this job after the flag is deleted.'
+            exit 0
+          fi
           allowed="$(jq -r '[.sources[] | select(.route == "visitor-key-relay") | .hosts[]][0] // empty' data/sources.json)"
           if [ -z "$allowed" ]; then
             echo '::error::data/sources.json has no visitor-key-relay host to probe with.'

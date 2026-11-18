@@ -231,3 +231,27 @@ test('a project with docs published elsewhere links there, not to a hub docs pat
     expect(manifest.projects.find((p) => p.slug === slug)?.docs, slug).toBe(docs);
   }
 });
+
+test('every on-demand route is listed in assets.run_worker_first', () => {
+  // An array there is the whole list of paths that reach the Worker (wrangler.jsonc): an
+  // on-demand route it leaves out answers the 404 page in production.
+  const config = JSON.parse(readFileSync('dist/server/wrangler.json', 'utf8')) as {
+    assets?: { run_worker_first?: string[] };
+  };
+  const listed = config.assets?.run_worker_first ?? [];
+  const onDemand: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(path);
+      else if (/export const prerender = false/.test(readFileSync(path, 'utf8')))
+        onDemand.push(path.replace(/^src\/pages/, '').replace(/(\/index)?\.[a-z]+$/, ''));
+    }
+  };
+  walk('src/pages');
+  expect(onDemand.sort()).toEqual(['/csp-report', '/healthz']);
+  for (const route of onDemand) expect(listed).toContain(route);
+  // The kill switch gate (P4-S5) needs the try page, with and without its trailing slash.
+  expect(listed).toContain('/alexandria/try');
+  expect(listed).toContain('/alexandria/try/*');
+});

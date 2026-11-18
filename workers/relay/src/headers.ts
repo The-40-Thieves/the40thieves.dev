@@ -44,18 +44,23 @@ const DROP_PREFIXES = ['proxy-', 'x-relay-', 'cf-', 'x-forwarded-', 'sec-'];
 const KEEP_EXACT = new Set(['content-type', 'etag', 'last-modified', 'retry-after']);
 const KEEP_PREFIX = 'x-ratelimit-';
 
+/** The header names a message's own `Connection` header nominates as hop-by-hop, lower-cased. */
+function connectionNamed(headers: Headers): Set<string> {
+  return new Set(
+    (headers.get('connection') ?? '')
+      .split(',')
+      .map((token) => token.trim().toLowerCase())
+      .filter((token) => token !== ''),
+  );
+}
+
 /**
  * The headers sent upstream: the visitor's request headers less everything on the drop list
  * and anything its own `Connection` header names, with the relay's user agent. Credentials
  * (`authorization`, any key header) pass through untouched.
  */
 export function upstreamHeaders(request: Headers): Headers {
-  const named = new Set(
-    (request.get('connection') ?? '')
-      .split(',')
-      .map((token) => token.trim().toLowerCase())
-      .filter((token) => token !== ''),
-  );
+  const named = connectionNamed(request);
   const out = new Headers();
   // Headers iterates with lower-cased names, so the comparisons below are case-insensitive.
   for (const [name, value] of request) {
@@ -68,13 +73,16 @@ export function upstreamHeaders(request: Headers): Headers {
 }
 
 /**
- * The headers sent to the browser: the allowlisted upstream headers, every `relay` policy
- * header, and `cache-control: no-store`. Never `content-length` or `content-encoding`: the
- * runtime may already have decoded the body.
+ * The headers sent to the browser: the allowlisted upstream headers, less any the upstream's own
+ * `Connection` header names as hop-by-hop, every `relay` policy header, and
+ * `cache-control: no-store`. Never `content-length` or `content-encoding`: the runtime may
+ * already have decoded the body.
  */
 export function clientHeaders(upstream: Headers): Headers {
+  const named = connectionNamed(upstream);
   const out = new Headers();
   for (const [name, value] of upstream) {
+    if (named.has(name)) continue;
     if (KEEP_EXACT.has(name) || name.startsWith(KEEP_PREFIX)) out.append(name, value);
   }
   for (const [name, value] of RELAY_HEADERS) out.set(name, value);

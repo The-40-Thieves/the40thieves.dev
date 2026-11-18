@@ -106,7 +106,8 @@ the key changes every day. A reserved request counts even if the upstream then f
 ### `GET | HEAD /v1/healthz`
 
 `200 { "ok": true, "hosts": <allowlist size>, "configured": <both secrets set>, "quota": [<sources
-with an operator key>] }`. No origin check, no log line. Any other path is `404 not_found`.
+with an operator key>], "paused": <kill switch on> }`. No origin check, no log line. Any other path
+is `404 not_found`.
 
 ### Errors
 
@@ -132,6 +133,7 @@ Every error body is `{ "error": "<code>" }`, with the policy headers. Codes and 
 | `turnstile_failed`   | 403    | No token, or siteverify did not pass it for `the40thieves.dev`                  |
 | `not_found`          | 404    | Any other path, or an unknown quota source                                      |
 | `not_configured`     | 503    | A relay secret is unset (all but healthz), or a quota source has no key         |
+| `paused`             | 503    | The kill switch is on (with `Retry-After: 300`); see "Kill switch"              |
 
 A body that goes over 2 MB or past the deadline after the upstream status was already sent cannot
 change status any more: the stream is cut with an error, and the log line records `too_large` or
@@ -227,6 +229,45 @@ What the first deploy needs, both in place since 2026-11-10:
    `production` environment as `TURNSTILE_SECRET_KEY`.
 2. `RELAY_SESSION_SECRET` (32 random bytes, hex), generated straight into the same environment,
    never displayed. Changing it ends every live session at once.
+
+## Kill switch
+
+One key in the `FLAGS` KV namespace pauses the relay and the `/alexandria/try/` page together
+(P4-S5). The rule lives in `security/pause-flag.ts`, which both Workers import.
+
+| To     | Do                                                                         |
+| ------ | -------------------------------------------------------------------------- |
+| Pause  | Write any value to the key `relay-paused` (a short reason is a good value) |
+| Resume | Delete the key `relay-paused`                                              |
+| Check  | `GET https://relay.the40thieves.dev/v1/healthz` and read `paused`          |
+
+```sh
+pnpm --filter @the40thieves/relay exec wrangler kv key put relay-paused "abuse, see runbook" --binding FLAGS --remote
+pnpm --filter @the40thieves/relay exec wrangler kv key delete relay-paused --binding FLAGS --remote
+```
+
+If the Cloudflare login can see more than one account, wrangler refuses to choose: set
+`CLOUDFLARE_ACCOUNT_ID` to the account that runs the relay first. The same key can be written or
+deleted in the dashboard, under Storage & Databases, Workers KV, `the40thieves-flags`.
+
+While paused:
+
+- `/v1/session`, `/v1/fetch` and `/v1/quota/<source>` answer `503 { "error": "paused" }` with
+  `Retry-After: 300`. Nothing is verified with Turnstile, no session is minted, no budget is
+  spent and nothing goes upstream. The checks that need no lookup (origin, method, target and
+  allowlist) still answer first, so an off-list host is still `403 host_not_allowed`.
+- Preflights and `/v1/healthz` answer as usual; healthz reports `"paused": true`.
+- `https://the40thieves.dev/alexandria/try/` answers a static page with status 503 and
+  `Retry-After: 300`. The page has no script, so the app does not load. Its web manifest, its icon
+  and its Markdown twin are still served.
+
+Each Worker reads the key with a 30 second cache, the shortest Workers KV allows, so a write
+takes effect everywhere within about 30 seconds. The values `0`, `false`, `off` and `no` count as
+not paused, so a mistaken "turn it off" write does not pause the site; deleting the key is the
+resume. If a read fails, a Worker keeps the last value it saw (not paused before its first
+successful read) and reports the failure: a KV outage neither pauses nor resumes the site.
+
+The deploy job skips its live refusal probes while the relay is paused and says so in a warning.
 
 ## Honest limitations
 

@@ -20,6 +20,20 @@ export function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+/**
+ * A link a result may carry: an absolute `http:` or `https:` URL, or null. Upstream text is not
+ * trusted, so a `javascript:`, `data:` or relative value never reaches an `href`.
+ */
+export function webUrl(value: string | null): string | null {
+  if (value === null || value === '') return null;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'https:' || protocol === 'http:' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 /** An id that may arrive as a number or a string. */
 export function idText(value: unknown): string {
   return typeof value === 'number' && Number.isFinite(value) ? String(value) : text(value);

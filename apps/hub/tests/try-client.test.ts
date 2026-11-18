@@ -20,6 +20,7 @@ import {
   TURNSTILE_SITEKEY,
 } from '../src/lib/try/relay.ts';
 import { TRY_SOURCES, type TryResult, type TrySource } from '../src/lib/try/sources.ts';
+import { webUrl } from '../src/lib/try/text.ts';
 import { tierFor, TIERS } from '../src/lib/try/tier.ts';
 
 // The try app's client logic (P4-S4), outside the browser: routing, the relay session, the
@@ -112,6 +113,9 @@ test('the production sitekey is used on the production host only', () => {
 test('failures read as something a visitor can act on', () => {
   expect(failureText(429, '7200', 'quota_reached')).toMatch(/about 2 h/);
   expect(failureText(429, null, 'rate_limited')).toMatch(/this minute/);
+  // The kill switch (P4-S5) is not "not configured".
+  expect(failureText(503, '300', 'paused')).toMatch(/paused/);
+  expect(failureText(503, null, 'not_configured')).toMatch(/Not configured/);
   // An upstream 429 passed through the relay is the source's limit, not the daily allowance.
   expect(failureText(429, '60', null)).toMatch(/limiting requests.*about a minute/);
   expect(failureText(429, '60', null)).not.toMatch(/Daily allowance/);
@@ -269,4 +273,20 @@ test('answer: reading responses and splitting citations', () => {
     { cite: 2 },
     { text: '[9] end' },
   ]);
+});
+
+test('a result link is an absolute http or https URL, or nothing', () => {
+  expect(webUrl('https://example.org/a?b=1')).toBe('https://example.org/a?b=1');
+  expect(webUrl('http://example.org/')).toBe('http://example.org/');
+  for (const value of [
+    null,
+    '',
+    'javascript:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
+    'vbscript:x',
+    '/relative',
+    'example.org',
+  ]) {
+    expect(webUrl(value), String(value)).toBeNull();
+  }
 });

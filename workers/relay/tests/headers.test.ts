@@ -123,3 +123,19 @@ test('clientHeaders carries the relay policy headers and no-store', () => {
   expect(out.get('cross-origin-resource-policy')).toBe('cross-origin');
   expect(out.get('cache-control')).toBe('no-store');
 });
+
+test('clientHeaders drops what the upstream names in its own Connection header', () => {
+  const out = clientHeaders(
+    new Headers({
+      connection: 'ETag, X-Ratelimit-Private',
+      etag: 'hop-value',
+      'x-ratelimit-private': 'hop-value',
+      'x-ratelimit-remaining': '9',
+      'content-type': 'application/json',
+    }),
+  );
+  expect(out.has('etag')).toBe(false);
+  expect(out.has('x-ratelimit-private')).toBe(false);
+  expect(out.get('x-ratelimit-remaining')).toBe('9');
+  expect(out.get('content-type')).toBe('application/json');
+});
