@@ -90,6 +90,19 @@ test('paused: every quota source answers 503 paused before a key, a budget or an
   );
 });
 
+test('paused comes before the operator key check: a source without a key is paused, not not_configured', async () => {
+  const h = harness({
+    paused: () => Promise.resolve(true),
+    quota: {
+      sources: QUOTA_SOURCES,
+      keys: new Map(),
+      store: memoryQuotaStore(),
+      metric: () => undefined,
+    },
+  });
+  await expectError(await h.send(quotaRequest('guardian', { session: await session() })), 'paused');
+});
+
 function sentHeaders(init: RequestInit | undefined): Headers {
   return new Headers(init?.headers);
 }
