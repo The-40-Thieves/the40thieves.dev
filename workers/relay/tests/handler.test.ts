@@ -52,6 +52,7 @@ test('the code list has one status per code, not_configured included', () => {
     turnstile_failed: 403,
     not_found: 404,
     not_configured: 503,
+    paused: 503,
   });
 });
 
@@ -269,6 +270,7 @@ test('healthz answers the host count without an origin check', async () => {
     hosts: RELAY_HOSTS.size,
     configured: true,
     quota: [],
+    paused: false,
   });
   expectPolicyHeaders(response);
 });
@@ -337,6 +339,7 @@ for (const [name, value] of [
       hosts: RELAY_HOSTS.size,
       configured: false,
       quota: [],
+      paused: false,
     });
     expectPolicyHeaders(health);
   });
@@ -351,6 +354,7 @@ test('with both secrets set the entry routes to the handler', async () => {
     hosts: RELAY_HOSTS.size,
     configured: true,
     quota: [],
+    paused: false,
   });
   const refused = await entry.default.fetch(
     fetchRequest({ target: 'https://evil.test/' }),

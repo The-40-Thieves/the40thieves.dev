@@ -1,3 +1,5 @@
+import { PAUSE_RETRY_AFTER_SECONDS } from '../../../security/pause-flag.ts';
+
 import { forward, type ForwardError } from './forward.ts';
 import { clientHeaders } from './headers.ts';
 import type { LogEntry } from './log.ts';
@@ -31,6 +33,7 @@ export const ERROR_CODES = {
   turnstile_failed: 403,
   not_found: 404,
   not_configured: 503,
+  paused: 503,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;
@@ -41,6 +44,7 @@ export const REQUEST_CAP_BYTES = 64 * 1024;
 const SESSION_BODY_CAP_BYTES = 4096;
 /** Mirrors `ratelimits[].simple.period` in wrangler.jsonc (60 fetches, 5 sessions per IP). */
 const RATE_LIMIT_PERIOD_SECONDS = 60;
+const PAUSED_HEADERS = { 'retry-after': String(PAUSE_RETRY_AFTER_SECONDS) };
 
 const FETCH_METHODS = new Set(['GET', 'HEAD', 'POST']);
 const EXPOSED_HEADERS = 'content-type, etag, last-modified, retry-after, x-quota-remaining';
@@ -80,6 +84,8 @@ export interface RelayDeps {
   log: (entry: LogEntry) => void;
   /** The quota relay (P4-S3); without it every `/v1/quota/*` request is not_configured. */
   quota?: QuotaDeps | undefined;
+  /** The kill switch (P4-S5): true while the operator has paused the relay. Absent is never. */
+  paused?: (() => Promise<boolean>) | undefined;
 }
 
 /** One cost-dashboard data point per `/v1/quota/*` request (Workers Analytics Engine). */
@@ -119,15 +125,16 @@ export function errorResponse(code: ErrorCode, extra: Record<string, string> = {
 }
 
 /**
- * `GET /v1/healthz`: up, how many hosts are allowed, whether both secrets are set, and which
- * quota sources have an operator key (names only).
+ * `GET /v1/healthz`: up, how many hosts are allowed, whether both secrets are set, which quota
+ * sources have an operator key (names only), and whether the kill switch is on.
  */
 export function healthzResponse(
   hosts: number,
   configured: boolean,
   quota: readonly string[] = [],
+  paused = false,
 ): Response {
-  return json(200, { ok: true, hosts, configured, quota });
+  return json(200, { ok: true, hosts, configured, quota, paused });
 }
 
 /** The read side of CORS, on every response to the allowed origin, errors included. */
@@ -194,14 +201,16 @@ function bodyStream(bytes: Uint8Array): ReadableStream<Uint8Array> {
 
 /**
  * The relay's request handler. `/v1/fetch` checks, first failure answering: preflight, origin,
- * method, target and allowlist (before any await), session, rate limit, request body cap, DNS,
- * then forwards. Each session, fetch and unknown-path request writes one log entry (preflights
+ * method, target and allowlist (before any await), the kill switch, session, rate limit, request
+ * body cap, DNS, then forwards. Each session, fetch and unknown-path request writes one log entry (preflights
  * and healthz write none); a refusal logs at once, a relayed body's entry is written through
  * `ctx.waitUntil` once the body finishes, with the real byte count and outcome.
  */
 export function createHandler(
   deps: RelayDeps,
 ): (request: Request, ctx: WaitUntil) => Promise<Response> {
+  const isPaused = (): Promise<boolean> => deps.paused?.() ?? Promise.resolve(false);
+
   async function relay(
     request: Request,
     ctx: WaitUntil,
@@ -227,6 +236,7 @@ export function createHandler(
     const target = parseTarget(request.headers.get('x-relay-target'), deps.hosts);
     if (!target.ok) return refuse(target.error);
     const host = target.url.hostname;
+    if (await isPaused()) return refuse('paused', host, PAUSED_HEADERS);
 
     const verdict = await verifySession(
       deps.sessionSecret,
@@ -308,6 +318,7 @@ export function createHandler(
     const target = parseTarget(request.headers.get('x-relay-target'), new Set([known.host]));
     if (!target.ok) return refuse(target.error);
     const host = known.host;
+    if (await isPaused()) return refuse('paused', host, PAUSED_HEADERS);
     const operatorKey = deps.quota.keys.get(known.name);
     if (operatorKey === undefined) return refuse('not_configured', host);
 
@@ -380,6 +391,8 @@ export function createHandler(
 
     if (!corsMatched) return refuse('origin_not_allowed');
     if (request.method !== 'POST') return refuse('method_not_allowed', { allow: 'POST' });
+    // Before the rate limit and Turnstile: a paused relay mints nothing and verifies nothing.
+    if (await isPaused()) return refuse('paused', PAUSED_HEADERS);
     if (await overLimit(deps.sessionLimiter, request)) {
       return refuse('rate_limited', { 'retry-after': String(RATE_LIMIT_PERIOD_SECONDS) });
     }
@@ -429,7 +442,7 @@ export function createHandler(
     } else if (pathname === '/v1/healthz') {
       if (request.method === 'GET' || request.method === 'HEAD') {
         const quotaNames = [...(deps.quota?.keys.keys() ?? [])].sort();
-        response = healthzResponse(deps.hosts.size, true, quotaNames);
+        response = healthzResponse(deps.hosts.size, true, quotaNames, await isPaused());
       } else {
         response = errorResponse('method_not_allowed', { allow: 'GET, HEAD' });
       }

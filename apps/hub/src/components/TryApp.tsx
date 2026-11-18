@@ -27,6 +27,7 @@ import {
   type TryRoute,
   type TrySource,
 } from '../lib/try/sources.ts';
+import { webUrl } from '../lib/try/text.ts';
 import { tierFor, type Tier } from '../lib/try/tier.ts';
 
 /**
@@ -382,6 +383,12 @@ export default function TryApp() {
                 const value = event.target.value as Provider;
                 setProvider(value);
                 setModel(PROVIDERS[value].model);
+                // A key belongs to the provider it was entered for: choosing another provider
+                // forgets it, so it is never sent to a host it was not issued by.
+                if (value !== provider) {
+                  store?.set(LLM_KEY, '');
+                  setLlmKey('');
+                }
               }}
             >
               {Object.entries(PROVIDERS).map(([id, entry]) => (
@@ -536,12 +543,12 @@ export default function TryApp() {
                   <ol className="mt-2 space-y-3">
                     {rows.map((result) => (
                       <li key={`${result.source}:${result.id}`} className="text-sm">
-                        {result.url === null ? (
+                        {webUrl(result.url) === null ? (
                           <span className="font-medium">{result.title}</span>
                         ) : (
                           <a
                             className="font-medium underline underline-offset-2"
-                            href={result.url}
+                            href={webUrl(result.url) ?? undefined}
                             rel="noopener noreferrer"
                             target="_blank"
                           >
@@ -617,12 +624,12 @@ export default function TryApp() {
                 {answer.sources.map((source, index) => (
                   <li key={`${source.source}:${source.id}`} id={`cite-${String(index + 1)}`}>
                     [{index + 1}]{' '}
-                    {source.url === null ? (
+                    {webUrl(source.url) === null ? (
                       source.title
                     ) : (
                       <a
                         className="underline underline-offset-2"
-                        href={source.url}
+                        href={webUrl(source.url) ?? undefined}
                         rel="noopener noreferrer"
                         target="_blank"
                       >

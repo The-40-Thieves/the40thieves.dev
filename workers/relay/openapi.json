@@ -228,7 +228,7 @@
       },
       "Health": {
         "type": "object",
-        "required": ["ok", "hosts", "configured", "quota"],
+        "required": ["ok", "hosts", "configured", "quota", "paused"],
         "additionalProperties": false,
         "properties": {
           "ok": { "const": true },
@@ -238,6 +238,10 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "The quota-relay sources that have an operator key, by name."
+          },
+          "paused": {
+            "type": "boolean",
+            "description": "True while the operator's kill switch is on: session, fetch and quota answer 503 paused."
           }
         }
       },
@@ -265,7 +269,8 @@
               "upstream_failed",
               "turnstile_failed",
               "not_found",
-              "not_configured"
+              "not_configured",
+              "paused"
             ]
           }
         }

@@ -1,3 +1,5 @@
+import { createPauseCheck } from '../../../security/pause-flag.ts';
+
 import { RELAY_HOSTS } from './allowlist.ts';
 import { createHandler, errorResponse, healthzResponse, type WaitUntil } from './handler.ts';
 import { writeLog } from './log.ts';
@@ -24,9 +26,18 @@ interface Env {
   QUOTA: DurableObjectNamespace;
   /** The quota relay's cost dashboard. */
   QUOTA_METRICS: AnalyticsEngineDataset;
+  /** The kill switch namespace (P4-S5), shared with the hub; see security/pause-flag.ts. */
+  FLAGS?: KVNamespace | undefined;
 }
 
 type Handler = (request: Request, ctx: WaitUntil) => Promise<Response>;
+
+/** A failed flag read is one log line with no detail: the error text could name the namespace. */
+function pauseCheck(env: Env): () => Promise<boolean> {
+  return createPauseCheck(env.FLAGS, () => {
+    writeLog({ route: 'other', outcome: 'flag_read_failed', status: 0, ms: 0 });
+  });
+}
 
 /**
  * Real dependencies, or null when a secret is unset or empty (an empty HMAC key throws).
@@ -57,6 +68,7 @@ function build(env: Env): Handler | null {
     sessionLimiter: env.SESSION_LIMITER,
     now: Date.now,
     log: writeLog,
+    paused: pauseCheck(env),
     quota: {
       sources: QUOTA_SOURCES,
       keys: parseOperatorKeys(env.OPERATOR_KEYS),
@@ -82,19 +94,21 @@ function build(env: Env): Handler | null {
 
 /** Built once per isolate, so the DNS verdict cache survives between requests. */
 let handler: Handler | null | undefined;
+let unconfiguredPause: (() => Promise<boolean>) | undefined;
 
 export { QuotaCounter } from './quota-counter.ts';
 
 export default {
-  fetch(request, env, ctx): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
     if (handler === undefined) handler = build(env);
     if (handler !== null) return handler(request, ctx);
     // Unconfigured: healthz still answers so a deploy can see the Worker is up.
     const { pathname } = new URL(request.url);
     if (pathname === '/v1/healthz' && (request.method === 'GET' || request.method === 'HEAD')) {
       const quota = [...parseOperatorKeys(env.OPERATOR_KEYS).keys()].sort();
-      return Promise.resolve(healthzResponse(RELAY_HOSTS.size, false, quota));
+      unconfiguredPause ??= pauseCheck(env);
+      return healthzResponse(RELAY_HOSTS.size, false, quota, await unconfiguredPause());
     }
-    return Promise.resolve(errorResponse('not_configured'));
+    return errorResponse('not_configured');
   },
 } satisfies ExportedHandler<Env>;

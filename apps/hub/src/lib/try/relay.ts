@@ -116,6 +116,7 @@ export function failureText(
       : `Daily allowance used up; resets in about ${String(hours)} h.`;
   }
   if (status === 401 || status === 403) return 'Refused: check the key, or the relay session.';
+  if (code === 'paused') return 'The relay is paused for now; try again later.';
   if (status === 503) return 'Not configured on the relay yet.';
   return `The source answered ${String(status)}.`;
 }

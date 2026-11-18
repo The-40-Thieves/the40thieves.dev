@@ -1,4 +1,4 @@
 {
   "extends": "@the40thieves/config/tsconfig.node.json",
-  "include": ["scripts/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": ["scripts/**/*.ts", "security/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
 }

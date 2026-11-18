@@ -36,6 +36,9 @@
   // The quota relay's cost dashboard: one data point per /v1/quota request (source, outcome, status).
   // The dataset is created on the first write. Query it with SQL; see docs/relay-cost-model.md.
   "analytics_engine_datasets": [{ "binding": "QUOTA_METRICS", "dataset": "relay_quota" }],
+  // The kill switch (P4-S5): the key relay-paused in this namespace pauses the relay and the hub's
+  // /alexandria/try page, which binds the same namespace; security/pause-flag.ts and the README.
+  "kv_namespaces": [{ "binding": "FLAGS", "id": "9da65982beb64c5f972ea51fbaf0519f" }],
   // Public configuration, not secrets. SITE is the one allowed browser origin; TURNSTILE_HOSTNAMES is the
   // hostname list a Turnstile token must have been issued for.
   "vars": {
