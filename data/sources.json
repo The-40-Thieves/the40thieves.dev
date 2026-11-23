@@ -4,12 +4,12 @@
   "origin": "https://the40thieves.dev",
   "upstream": {
     "repo": "The-40-Thieves/alexandria-mcp",
-    "commit": "0be8f2c3014380f61a7a102406fb61e4a5c61f5a",
+    "commit": "2d782ab0a2b932ab07d25782c7f5783b801cde52",
     "sources": 152
   },
   "routes": {
-    "browser-direct": 70,
-    "visitor-key-relay": 67,
+    "browser-direct": 65,
+    "visitor-key-relay": 72,
     "quota-relay": 3,
     "mcp-only": 12
   },
@@ -357,18 +357,16 @@
       "freshness": "static",
       "description": "Chronicling America (LOC): full OCR text of US newspapers 1770-1963, now served via the unified loc.gov search/item API.",
       "key": null,
-      "cors": "open",
-      "hosts": [
-        "www.loc.gov"
-      ],
+      "cors": "unknown",
+      "hosts": [],
       "terms": {
         "url": "https://www.loc.gov/collections/chronicling-america/",
         "ingest": "allowed"
       },
-      "route": "browser-direct",
+      "route": "visitor-key-relay",
       "probe": {
-        "status": "ok",
-        "detail": "timeout"
+        "status": "failed",
+        "detail": "no request observed"
       }
     },
     {
@@ -1468,7 +1466,7 @@
       "freshness": "static",
       "description": "Project Gutenberg — 76k+ public domain books, best for pre-1928 literature.",
       "key": null,
-      "cors": "open",
+      "cors": "closed",
       "hosts": [
         "gutendex.com"
       ],
@@ -1476,10 +1474,10 @@
         "url": "https://www.gutenberg.org",
         "ingest": "allowed"
       },
-      "route": "browser-direct",
+      "route": "visitor-key-relay",
       "probe": {
         "status": "ok",
-        "detail": null
+        "detail": "HTTP 403"
       }
     },
     {
@@ -1556,7 +1554,7 @@
       "freshness": "daily",
       "description": "Harvard LibraryCloud: 20M+ records from Harvard Libraries: books, archives, manuscripts, maps, photographs, theses. Public REST API, no key required. Hidden: api.lib.harvard.edu returns 429 from its load balancer for datacenter clients as of 2026-09; revisit.",
       "key": null,
-      "cors": "open",
+      "cors": "closed",
       "hosts": [
         "api.lib.harvard.edu"
       ],
@@ -1564,10 +1562,10 @@
         "url": "https://library.harvard.edu",
         "ingest": "allowed"
       },
-      "route": "browser-direct",
+      "route": "visitor-key-relay",
       "probe": {
         "status": "ok",
-        "detail": "TypeError: (data.items || []).map is not a function"
+        "detail": "HTTP 403"
       }
     },
     {
@@ -1848,7 +1846,7 @@
       "freshness": "daily",
       "description": "Library of Congress — US history, maps, newspapers, manuscripts. 170M+ items. Metadata and discovery.",
       "key": null,
-      "cors": "open",
+      "cors": "closed",
       "hosts": [
         "www.loc.gov"
       ],
@@ -1856,10 +1854,10 @@
         "url": "https://www.loc.gov",
         "ingest": "allowed"
       },
-      "route": "browser-direct",
+      "route": "visitor-key-relay",
       "probe": {
         "status": "ok",
-        "detail": null
+        "detail": "HTTP 429"
       }
     },
     {
@@ -3102,7 +3100,7 @@
       "freshness": "static",
       "description": "World Digital Library (via LOC) — 19k+ rare and unique cultural heritage items from 200 countries, 8000 BCE–present. Maps, manuscripts, photographs, films, sound recordings.",
       "key": null,
-      "cors": "open",
+      "cors": "closed",
       "hosts": [
         "www.loc.gov"
       ],
@@ -3110,10 +3108,10 @@
         "url": "https://www.loc.gov/collections/world-digital-library/",
         "ingest": "allowed"
       },
-      "route": "browser-direct",
+      "route": "visitor-key-relay",
       "probe": {
         "status": "ok",
-        "detail": null
+        "detail": "HTTP 429"
       }
     },
     {
